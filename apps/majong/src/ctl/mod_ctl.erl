@@ -16,7 +16,7 @@ init() ->
 start_player_sup() ->
     ChildSpec = {player_sup, {player_sup, start_link, []},
         permanent, 60000, supervisor, [player_sup]},
-    supervisor:start_child(dr2_logic_sup, ChildSpec).
+    supervisor:start_child(majong_sup, ChildSpec).
 
 start_listen() ->
     SockOpt = [binary, {packet, 2}, {active, true}, {reuseaddr, true}, {nodelay, true},
