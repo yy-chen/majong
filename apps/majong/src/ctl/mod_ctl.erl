@@ -9,6 +9,7 @@
 
 init() ->
     lager:info("logic start"),
+    start_player_sup(),
     start_listen(),
     ok.
 
