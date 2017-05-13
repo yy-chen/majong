@@ -1,0 +1,14 @@
+{"1.1.0",
+[{<<"dhcomm">>,
+  {git,"git@github.com:devDroidhang/dhcomm.git",
+       {ref,"76b07c5cab0cf2ce69e3c925a7665b08b94c2d72"}},
+  0},
+ {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
+ {<<"lager">>,
+  {git,"git@github.com:erlang-lager/lager.git",
+       {ref,"a10c23c51dea6bbd63e5048c8a5a702169973114"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>}]}
+].
