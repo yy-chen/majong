@@ -8,7 +8,6 @@
     ]).
 
 init() ->
-lager:start(),
     lager:info("logic start"),
     start_listen(),
     ok.
