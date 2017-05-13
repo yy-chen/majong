@@ -3,6 +3,7 @@
 -author("songxiao").
 
 -behaviour(gen_server).
+-record(state, {net :: pid()}).
 -export([init/1,
         handle_call/3,
         handle_cast/2,
