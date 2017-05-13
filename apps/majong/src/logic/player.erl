@@ -4,6 +4,8 @@
 
 -behaviour(gen_server).
 -record(state, {net :: pid()}).
+-define(Conn, dhtcp_conn).
+
 -export([init/1,
         handle_call/3,
         handle_cast/2,
@@ -27,6 +29,11 @@ handle_cast(_Request, State) ->
 
 handle_info({dhtcp, _, Data}, S) -> %%接收到tcp数据
     lager:info("data : ~p", [Data]),
+    rsp(Data),
+    {noreply, S};
+
+handle_info({dhconn_start, Pid}, S) ->
+    put(?Conn, Pid),
     {noreply, S};
 
 handle_info(_Info, State) ->
@@ -34,4 +41,8 @@ handle_info(_Info, State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 terminate(_Reason, _State) ->
+    ok.
+
+rsp(Bin) ->
+    dhtcp_conn:send(get(?Conn), Bin),
     ok.
