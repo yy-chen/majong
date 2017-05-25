@@ -48,7 +48,8 @@ code_change(_OldVsn, State, _Extra) ->
 terminate(_Reason, _State) ->
   ok.
 
-dispatch(<<G:16, C:16, Bin/binary>>) ->
+dispatch(<<G:32, C:32, Bin/binary>>) ->
+  lager:info("g : ~p c : ~p", [G, C]),
   case G of
     1 -> mod_play:dispatch(C, Bin)
   end,
@@ -56,5 +57,5 @@ dispatch(<<G:16, C:16, Bin/binary>>) ->
 
 rsp(G, C, R) ->
   Bin = iolist_to_binary(majong_pb:encode_msg(R)),
-  dhtcp_conn:send(get(?Conn), <<G:16, C:16, Bin/binary>>),
+  dhtcp_conn:send(get(?Conn), <<G:32, C:32, Bin/binary>>),
   ok.
