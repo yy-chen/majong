@@ -15,7 +15,7 @@
 
 
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+  supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%%===================================================================
 %%% Supervisor callbacks
@@ -23,17 +23,17 @@ start_link() ->
 
 
 init([]) ->
-    RestartStrategy = simple_one_for_one,
-    MaxRestarts = 1000,
-    MaxSecondsBetweenRestarts = 3600,
+  RestartStrategy = simple_one_for_one,
+  MaxRestarts = 1000,
+  MaxSecondsBetweenRestarts = 3600,
 
-    SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
+  SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
-    Restart = temporary,
-    Shutdown = 2000,
-    Type = worker,
+  Restart = temporary,
+  Shutdown = 2000,
+  Type = worker,
 
-    AChild = {player, {player, start_link, []},
-        Restart, Shutdown, Type, [player]},
+  AChild = {player, {player, start_link, []},
+    Restart, Shutdown, Type, [player]},
 
-    {ok, {SupFlags, [AChild]}}.
+  {ok, {SupFlags, [AChild]}}.
