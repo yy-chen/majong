@@ -1,18 +1,19 @@
 {application, majong,
- [{description, "An OTP application"},
-  {vsn, "0.1.0"},
-  {registered, []},
-  {mod, { majong_app, []}},
-  {applications,
-   [kernel,
-    stdlib,
-    lager,
-    dhcomm
-   ]},
-  {env,[]},
-  {modules, []},
+  [{description, "An OTP application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {majong_app, []}},
+    {applications,
+      [kernel,
+        stdlib,
+        lager,
+        dhcomm,
+        gproc
+      ]},
+    {env, []},
+    {modules, []},
 
-  {maintainers, []},
-  {licenses, []},
-  {links, []}
- ]}.
+    {maintainers, []},
+    {licenses, []},
+    {links, []}
+  ]}.

@@ -15,11 +15,28 @@
   code_change/3]).
 
 -export([
-  rsp/3
+  rsp/3,
+  sync_exec/2,
+  async_exec/2
 ]).
 
 start_link() ->
   gen_server:start_link(?MODULE, [], []).
+
+pid(Pid) when is_pid(Pid) -> Pid;
+pid(Uid) -> gproc:whereis_name({n, l, {uid, Uid}}).
+
+sync_exec(Info, {M, F, A}) ->
+  case pid(Info) of
+    undefined -> {error, no_player};
+    Pid -> gen_server:call(Pid, {exec, M, F, A})
+  end.
+
+async_exec(Info, {M, F, A}) ->
+  case pid(Info) of
+    undefined -> {error, no_player};
+    Pid -> gen_server:cast(Pid, {exec, M, F, A})
+  end.
 
 init([]) ->
   process_flag(trap_exit, true),
@@ -51,9 +68,9 @@ terminate(_Reason, _State) ->
 dispatch(<<G:32, C:32, Bin/binary>>) ->
   lager:info("g : ~p c : ~p", [G, C]),
   case G of
-    1 -> mod_play:dispatch(C, Bin)
-  end,
-  ok.
+    1 -> mod_play:dispatch(C, Bin);
+    2 -> mod_room:dispatch(C, Bin)
+  end.
 
 rsp(G, C, R) ->
   Bin = iolist_to_binary(majong_pb:encode_msg(R)),

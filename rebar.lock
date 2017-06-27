@@ -1,5 +1,9 @@
 {"1.1.0",
-[{<<"dhcomm">>,
+[{<<"bson">>,
+  {git,"git://github.com/comtihon/bson-erlang",
+       {ref,"14308ab927cfa69324742c3de720578094e0bb19"}},
+  1},
+ {<<"dhcomm">>,
   {git,"git@github.com:devDroidhang/dhcomm.git",
        {ref,"76b07c5cab0cf2ce69e3c925a7665b08b94c2d72"}},
   0},
@@ -8,10 +12,26 @@
   {git,"git@github.com:tomas-abrahamsson/gpb.git",
        {ref,"dc5a36f55250d144822ded74150c9d99cc072a1b"}},
   0},
+ {<<"gproc">>,
+  {git,"git@github.com:uwiger/gproc.git",
+       {ref,"01c8fbfdd5e4701e8e4b57b0c8279872f9574b0b"}},
+  0},
  {<<"lager">>,
   {git,"git@github.com:erlang-lager/lager.git",
        {ref,"a10c23c51dea6bbd63e5048c8a5a702169973114"}},
-  0}]}.
+  0},
+ {<<"mongodb">>,
+  {git,"git@github.com:comtihon/mongodb-erlang.git",
+       {ref,"ee9d10a842a308a2727560a04f5c6c56f94c6462"}},
+  0},
+ {<<"pbkdf2">>,
+  {git,"git://github.com/comtihon/erlang-pbkdf2.git",
+       {ref,"7076584f5377e98600a7e2cb81980b2992fb2f71"}},
+  1},
+ {<<"poolboy">>,
+  {git,"git://github.com/comtihon/poolboy.git",
+       {ref,"04ea8a5479b273a052942755ebdc42c9e318d907"}},
+  1}]}.
 [
 {pkg_hash,[
  {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>}]}

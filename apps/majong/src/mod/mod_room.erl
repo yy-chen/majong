@@ -8,14 +8,90 @@
 %%%-------------------------------------------------------------------
 -module(mod_room).
 -author("cyy").
-
+-include("majong_pb.hrl").
+-define(PDict, mod_room).
 %% API
 -export([
-
+  dispatch/2,
+  create/1,
+  new_player/1
 ]).
 
-create() ->
+%%#{room_id => int()}
+
+dispatch(C, Bin) ->
+  case C of
+    1 -> create(Bin);
+    2 -> join(Bin)
+  end.
+
+create(Bin) ->
+  #req_create_room{round = Round, pay = Pay, banker = Banker, special = Special, type = Type} = majong_pb:decode_msg(Bin, req_create_room),
+  lager:info("round : ~p pay : ~p banker : ~p special : ~p type : ~p", [Round, Pay, Banker, Special, Type]),
+  RoomInfo = #{round => Round, pay => Pay, banker => Banker, special => Special, type => Type},
+  Uid = mod_play:id(),
+  PlayerInfo = mod_play:base(),
+  case room:create(PlayerInfo, RoomInfo) of
+    {ok, RoomId} ->
+      lager:info("uid : ~p create success : ~p", [Uid, RoomId]),
+      down(#{room_id => RoomId}),
+      player:rsp(2, 1, #rsp_create_room{status = 0, room_id = RoomId, coins = 100});
+    {error, Reason} ->
+      lager:info("error : ~p", [Reason]),
+      player:rsp(2, 1, #rsp_create_room{status = -1})
+  end.
+
+join(Bin) ->
+  #req_join{id = RoomId} = majong_pb:decode_msg(Bin, req_join),
+  Info = mod_play:base(),
+  case room:sync_exec(RoomId, {room_base, join, [Info#{pid => self()}]}) of
+    {error, _} -> player:rsp(2, 2, #rsp_join{status = -1});
+    #{room_info := RoomInfo, players := Players} ->
+      PbRoom = room2pb(RoomInfo),
+      PbPlayers = player2pb(Players),
+      down(#{room_id => RoomId}),
+      player:rsp(2, 2, #rsp_join{status = 0, players = PbPlayers, room_info = PbRoom})
+  end.
+
+new_player(Player) ->
+  player:rsp(2, 3, #rsp_new_player{player = player2pb(Player)}).
+
+leave() ->
+  Uid = mod_play:id(),
+  #{room_id := RoomId} = load(),
+  room:async_exec(RoomId, {room_base, leave, [Uid]}),
+  clear(),
+  player:rsp(2, 4, #rsp_leave{status = 0}).
+
+player_leave(Uid) ->
+  player:rsp(2, 5, #rsp_player_leave{uid = Uid}).
+
+ready(Bin) ->
+  #req_ready{type = Type} = majong_pb:decode_msg(Bin, req_ready),
+  Uid = mod_play:id(),
+  #{room_id := RoomId} = load(),
+  room:async_exec(RoomId, {room_base, ready, [Uid, Type]}),
+  player:rsp(2, 6, #rsp_ready{status = 0}).
+
+player_ready(Uid, Type) ->
+  player:rsp(2, 7, #rsp_player_ready{uid = Uid, type = Type}).
+
+start() ->
   ok.
 
-join() ->
+load() ->
+  get(?PDict).
+down(Room) ->
+  put(?PDict, Room).
+clear() ->
+  erase(?PDict).
+
+room2pb(Room) ->
+  #{room_id := RoomId, owner := Owner, round := Round, pay := Pay, banker := Banker, special := Special, type := Type} = Room,
+  #pb_room_info{room_id = RoomId, owner = Owner, round = Round, pay = Pay, banker = Banker, special = Special, type = Type}.
+
+player2pb(Players) when is_list(Players) ->
+  [player2pb(Player) || Player <- Players];
+player2pb(Player) ->
   ok.
+

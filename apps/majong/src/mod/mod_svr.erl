@@ -12,7 +12,8 @@
 %% API
 -export([
   init/0,
-  room_id/0
+  room_id/0,
+  room_id/1
 ]).
 
 init() ->
@@ -24,6 +25,8 @@ init() ->
   end.
 
 insert(Tuple) -> ets:insert(?Name, Tuple).
+
+delete(Key) -> ets:delete(?Name, Key).
 
 lookup(Key) ->
   case ets:lookup(?Name, Key) of
@@ -37,6 +40,7 @@ room_id() ->
     error ->
       insert({{room, Id}, true}),
       Id;
-    _ ->
-      room_id()
+    _ -> room_id()
   end.
+
+room_id(RoomId) -> delete(RoomId).

@@ -9,18 +9,24 @@
 -module(mod_play).
 -author("cyy").
 -include("majong_pb.hrl").
+-define(PDict, mod_play).
 
 %% API
 -export([
   dispatch/2
 ]).
 
+-export([
+  id/0,
+  id/1,
+  base/0
+]).
+
 dispatch(C, B) ->
   case C of
     1 -> login(B);
     2 -> pub(B)
-  end,
-  ok.
+  end.
 
 login(Bin) ->
   #req_login{open_id = OpenId, token = Token} = majong_pb:decode_msg(Bin, req_login),
@@ -30,3 +36,7 @@ login(Bin) ->
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),
   ok.
+
+id(Uid) -> put(user_id, Uid).
+id() -> get(user_id).
+base() -> maps:with([uid, name, logo], get(?PDict)).
