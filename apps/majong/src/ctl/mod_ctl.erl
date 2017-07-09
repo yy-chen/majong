@@ -11,6 +11,7 @@ init() ->
   lager:info("logic start"),
   start_player_sup(),
   start_listen(),
+  inets:start(),
   ok.
 
 start_player_sup() ->

@@ -9,7 +9,9 @@
 -module(room_base).
 -author("cyy").
 -define(PDict, room_base).
-
+-define(Ready, 1).
+-define(Banker, 2).
+-define(Score, 3).
 %% API
 -export([
   create/1,
@@ -19,11 +21,11 @@
 
 %%% players => [#{uid => 1, logo => 2, name => 3}]
 %%% owner => int()
-%%% room_info => map()
+%%% room_info => #{round => int(), pay => int(), banker => int(), special => int(), type => int()}
 %%% ready => []
 create(#{player := PlayerInfo, room_id := _RoomId, room_info := RoomInfo}) ->
   #{uid := Uid} = PlayerInfo,
-  down(#{players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo, num => 1, ready => []}).
+  down(#{players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo, num => 1, ready => [], state => ?Ready}).
 
 join(Player) ->
   #{players := Players, num := Num} = Room = load(),
@@ -31,7 +33,7 @@ join(Player) ->
     Num == 5 -> {error, full};     %%满人
     true ->
       down(Room#{players => Players ++ [Player], num => Num + 1}),
-      multi_cast(Players, {exec, {mod_room, new_player, Player}})
+      multi_cast(Players, {mod_room, new_player, Player})
   end.
 
 leave(Uid) ->
@@ -43,15 +45,29 @@ leave(Uid) ->
       true -> {NPlayers ++ [Player#{index => Index - Flag}]}
     end end, {[], 0}, Players),
   down(Room#{players => NewPlayers, num => Num - F}),
-  multi_cast(NewPlayers, {exec, {mod_room, player_leave, [Uid]}}).
+  multi_cast(NewPlayers, {mod_room, player_leave, [Uid]}).
 
 ready(Uid, Type) ->
-  #{ready := Ready, player := Players} = Room = load(),
+  #{ready := Ready, players := Players} = Room = load(),
   if
     Type == 1 -> down(Room#{ready => lists:usort([Uid | Ready])});
     true -> down(Room#{ready => lists:delete(Uid, Ready)})
   end,
-  multi_cast(Players, {exec, {mod_room, player_ready, [Uid]}}).
+  multi_cast(Players, {mod_room, player_ready, [Uid]}).
+
+start(Uid) ->
+  #{owner := Owner, ready := Ready, players := Players, room_info := RoomInfo, state := State} = Room = load(),
+  if
+    Owner =/= Uid -> {error, no_owner};
+    length(Ready) =/= length(Players) - 1 -> {error, no_ready};  %%房主不用准备
+    State =/= ?Ready -> {error, no_ready};
+    true ->
+      #{banker := BankerType} = RoomInfo,
+      case room_war:choose_banker(Players, BankerType) of
+        undefined -> multi_cast(Players, {mod_room, game_start, []});
+        Uid -> multi_cast(Players, {mod_room, game_start, [Uid]})
+      end
+  end.
 
 down(RoomInfo) ->
   put(?PDict, RoomInfo).
@@ -60,4 +76,4 @@ load() ->
   get(?PDict).
 
 multi_cast(Players, Msg) ->
-  [gen_server:cast(Pid, Msg) || #{pid := Pid} <- Players].
+  [player:async_exec(Pid, Msg) || #{pid := Pid} <- Players].

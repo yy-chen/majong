@@ -14,7 +14,11 @@
 -export([
   dispatch/2,
   create/1,
-  new_player/1
+  new_player/1,
+  player_leave/1,
+  player_ready/2,
+  game_start/0,
+  game_start/1
 ]).
 
 %%#{room_id => int()}
@@ -22,7 +26,10 @@
 dispatch(C, Bin) ->
   case C of
     1 -> create(Bin);
-    2 -> join(Bin)
+    2 -> join(Bin);
+    4 -> leave();
+    6 -> ready(Bin);
+    8 -> start()
   end.
 
 create(Bin) ->
@@ -77,7 +84,14 @@ player_ready(Uid, Type) ->
   player:rsp(2, 7, #rsp_player_ready{uid = Uid, type = Type}).
 
 start() ->
-  ok.
+  #{room_id := RoomId} = load(),
+  case room:sync_exec(RoomId, {room_base, start, [mod_play:id()]}) of
+    {error, _} -> player:rsp(2, 8, #rsp_start{status = -1});
+    _ -> player:rsp(2, 8, #rsp_start{status = 0})
+  end.
+
+game_start() -> player:rsp(2, 9, #rsp_game_start{}).     %%抢庄模式 没庄家
+game_start(Uid) -> player:rsp(2, 9, #rsp_game_start{uid = Uid}).
 
 load() ->
   get(?PDict).
