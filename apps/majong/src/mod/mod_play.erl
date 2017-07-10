@@ -29,9 +29,13 @@ dispatch(C, B) ->
   end.
 
 login(Bin) ->
-  #req_login{open_id = OpenId, token = Token} = majong_pb:decode_msg(Bin, req_login),
-  lager:info("openid : ~p  token : ~p", [OpenId, Token]),
-  player:rsp(1, 1, #rsp_login{status = 0, coins = 111, gems = 121}).
+  #req_login{code = Code, channel = Channel, user_id = UserId} = majong_pb:decode_msg(Bin, req_login),
+  {Status, UserInfo} = if
+    Channel == 1 orelse Channel == 2 -> wx_login:login(Code, Channel);
+    true -> ok
+  end,
+  lager:info("code : ~p", [Code]),
+  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121}).
 
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),

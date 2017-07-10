@@ -17,8 +17,9 @@
 -ifndef('REQ_LOGIN_PB_H').
 -define('REQ_LOGIN_PB_H', true).
 -record(req_login,
-        {open_id,                       % = 1, string
-         token                          % = 2, string
+        {code,                          % = 1, string (optional)
+         channel,                       % = 2, int32 (optional)
+         user_id                        % = 3, int32 (optional)
         }).
 -endif.
 
@@ -89,21 +90,21 @@
 -record(rsp_join,
         {status,                        % = 1, sint32
          players = [],                  % = 2, [{msg,pb_player}]
-         room_info                      % = 3, {msg,pb_room_info}
+         room_info                      % = 3, {msg,pb_room_info} (optional)
         }).
 -endif.
 
 -ifndef('RSP_PLAYER_ZHUANG_PB_H').
 -define('RSP_PLAYER_ZHUANG_PB_H', true).
 -record(rsp_player_zhuang,
-        {
+        {uid                            % = 1, int32
         }).
 -endif.
 
 -ifndef('RSP_ZHUANG_PB_H').
 -define('RSP_ZHUANG_PB_H', true).
 -record(rsp_zhuang,
-        {
+        {status                         % = 1, sint32
         }).
 -endif.
 
