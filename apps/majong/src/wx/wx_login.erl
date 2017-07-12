@@ -9,7 +9,7 @@
 -module(wx_login).
 -author("cyy").
 -define(AppId, "wx4403974ea8b2b025").
--define(AndroidSecret, "wx4403974ea8b2b025589365546327463d7a68c0bcbcf826e6").
+-define(AndroidSecret, "589365546327463d7a68c0bcbcf826e6").
 %% API
 -export([
   login/2
@@ -20,7 +20,21 @@ login(Channel, Code) ->
              Channel == 1 -> ?AndroidSecret
            end,
   Url = "https://api.weixin.qq.com/sns/oauth2/access_token" ++
-  "?appid=" ++ ?AppId ++ "&secret=" ++ Secret ++ "&code="++Code++"&grant_type=authorization_code",
+  "?appid=" ++ ?AppId ++ "&secret=" ++ Secret ++ "&code=" ++ Code ++ "&grant_type=authorization_code",
   {ok, {{_, 200, _}, _, Res}} = httpc:request(get, {Url, []}, [], []),
-  lager:info("res : ~p", [jiffy:decode(Res, [return_maps])]),
-  {0, #{}}.
+  Res1 = jiffy:decode(Res, [return_maps]),
+  case maps:get(<<"openid">>, Res1, undefined) of
+    undefined -> {-1, #{}};
+    OpenId ->
+      #{<<"access_token">> := AccessToken} = Res1,
+      Url1 = "https://api.weixin.qq.com/sns/userinfo?access_token=" ++ binary_to_list(AccessToken),
+      {ok, {{_, 200, _}, _, UserInfo}} = httpc:request(get, {Url1, []}, [], []),
+      UserInfo1 = jiffy:decode(UserInfo, [return_maps]),
+      MgoUser = mgo_user:load(OpenId),
+      R = merge(UserInfo1, MgoUser),
+      {0, R}
+  end.
+
+merge(UserInfo1, UserInfo2) ->
+  lager:info("userinfo1 : ~p  usesrinfo2 : ~p", [UserInfo1, UserInfo2]),
+  #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>}.

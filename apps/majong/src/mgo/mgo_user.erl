@@ -11,10 +11,10 @@
 -define(Coll, player).
 %% API
 -export([
-
+  load/1
 ]).
 
 load(undefined) ->  %%新建
-  ok;
+  #{coins => 0, gems => 0};
 load(Uid) ->
-  ok.
+  #{coins => 0, gems => 0}.
