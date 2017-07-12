@@ -16,6 +16,7 @@
 ]).
 
 login(Channel, Code) ->
+  lager:info("channel : ~p code : ~p", [Channel, Code]),
   Secret = if
              Channel == 1 -> ?AndroidSecret
            end,
