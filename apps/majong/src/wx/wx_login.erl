@@ -9,13 +9,14 @@
 -module(wx_login).
 -author("cyy").
 -define(AppId, "wx4403974ea8b2b025").
--define(AndroidSecret, "wx4403974ea8b2b025589365546327463d7a68c0bcbcf826e6").
+-define(AndroidSecret, "589365546327463d7a68c0bcbcf826e6").
 %% API
 -export([
   login/2
 ]).
 
 login(Channel, Code) ->
+  lager:info("channel : ~p code : ~p", [Channel, Code]),
   Secret = if
              Channel == 1 -> ?AndroidSecret
            end,

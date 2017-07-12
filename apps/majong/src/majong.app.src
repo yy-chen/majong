@@ -6,10 +6,12 @@
     {applications,
       [kernel,
         stdlib,
+        ssl,
         inets,
         lager,
         dhcomm,
-        gproc
+        gproc,
+        jiffy
       ]},
     {env, []},
     {modules, []},
