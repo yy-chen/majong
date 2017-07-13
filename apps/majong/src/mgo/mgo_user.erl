@@ -16,6 +16,7 @@
 
 load(undefined) ->  %%新建
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => 12345678};
-load(Uid) ->
+load(Uid) when is_integer(Uid)->
+  #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => 12345678};
+load(OpenId) ->
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => 12345678}.
-

@@ -35,7 +35,7 @@ lookup(Key) ->
   end.
 
 room_id() ->
-  Id = rand:uniform(100000),
+  Id = rand:uniform(9) * 100000 + rand:uniform(100000),
   case lookup({room, Id}) of
     error ->
       insert({{room, Id}, true}),
