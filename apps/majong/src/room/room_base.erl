@@ -28,13 +28,13 @@ create(#{player := PlayerInfo, room_id := _RoomId, room_info := RoomInfo}) ->
   down(#{players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo, num => 1, ready => [], state => ?Ready}).
 
 join(Player) ->
-  #{players := Players, num := Num, room_info := RoomInfo} = Room = load(),
+  #{players := Players, num := Num} = Room = load(),
   if
     Num == 5 -> {error, full};     %%满人
     true ->
       down(Room#{players => Players ++ [Player], num => Num + 1}),
       multi_cast(Players, {mod_room, new_player, Player}),
-      RoomInfo
+      Room
   end.
 
 leave(Uid) ->
