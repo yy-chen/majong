@@ -9,10 +9,11 @@
 
 init() ->
   lager:info("logic start"),
-  start_player_sup(),
-  start_listen(),
   inets:start(),
   mod_svr:init(),
+  start_player_sup(),
+  start_listen(),
+  start_room(),
   ok.
 
 start_player_sup() ->
@@ -25,6 +26,12 @@ start_listen() ->
     {delay_send, false}, {send_timeout, 5000}, {keepalive, true}, {ip, {0, 0, 0, 0}}],
   {ok, _} = dhtcp:start(6667, SockOpt, 10, {supervisor, start_child, [player_sup, []]}, agent),
   lager:info("tcp listen  ok").
+
+start_room() ->
+  ChildSpec = {room_sup, {room_sup, start_link, []},
+    permanent, 60000, supervisor, [room_sup]},
+  supervisor:start_child(majong_sup, ChildSpec),
+  lager:info("room start ok").
 
 stop() ->
   ok.
