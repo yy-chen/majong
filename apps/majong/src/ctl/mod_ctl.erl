@@ -12,6 +12,7 @@ init() ->
   start_player_sup(),
   start_listen(),
   inets:start(),
+  mod_svr:init(),
   ok.
 
 start_player_sup() ->

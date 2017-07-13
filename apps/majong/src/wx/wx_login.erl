@@ -38,5 +38,6 @@ login(Channel, Code) ->
   end.
 
 merge(UserInfo1, UserInfo2) ->
+  #{<<"headimgurl">> := Logo, <<"nickname">> := Name} = UserInfo1,
   lager:info("userinfo1 : ~p  usesrinfo2 : ~p", [UserInfo1, UserInfo2]),
-  #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>}.
+  UserInfo2#{<<"logo">> => Logo, <<"name">> => Name}.
