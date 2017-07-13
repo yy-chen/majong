@@ -15,6 +15,6 @@
 ]).
 
 load(undefined) ->  %%新建
-  #{coins => 0, gems => 0};
+  #{<<"coins">> => 0, <<"gems">> => 0, <<"logo">> => <<"">>, <<"name">> => <<"">>};
 load(Uid) ->
-  #{coins => 0, gems => 0}.
+  #{<<"coins">> => 0, <<"gems">> => 0, <<"logo">> => <<"">>, <<"name">> => <<"">>}.

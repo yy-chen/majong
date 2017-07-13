@@ -32,7 +32,7 @@ login(Bin) ->
   #req_login{code = Code, channel = Channel, user_id = UserId} = majong_pb:decode_msg(Bin, req_login),
   {Status, UserInfo} = if
     Channel == 1 orelse Channel == 2 -> wx_login:login(Channel, Code);
-    true -> {0, #{}}
+    true -> {0, mgo_user:load(UserId)}
   end,
   lager:info("code : ~p", [Code]),
   lager:info("user info : ~p ", [UserInfo]),
