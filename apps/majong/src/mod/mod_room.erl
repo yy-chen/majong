@@ -107,5 +107,6 @@ room2pb(Room) ->
 player2pb(Players) when is_list(Players) ->
   [player2pb(Player) || Player <- Players];
 player2pb(Player) ->
+  lager:info("player : ~p", [Player]),
   ok.
 

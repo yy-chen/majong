@@ -28,7 +28,8 @@ login(Channel, Code) ->
     undefined -> {-1, #{}};
     OpenId ->
       #{<<"access_token">> := AccessToken} = Res1,
-      Url1 = "https://api.weixin.qq.com/sns/userinfo?access_token=" ++ binary_to_list(AccessToken),
+      Url1 = "https://api.weixin.qq.com/sns/userinfo?access_token=" ++ binary_to_list(AccessToken)
+        ++ "&openid=" ++ binary_to_list(OpenId),
       {ok, {{_, 200, _}, _, UserInfo}} = httpc:request(get, {Url1, []}, [], []),
       UserInfo1 = jiffy:decode(UserInfo, [return_maps]),
       MgoUser = mgo_user:load(OpenId),

@@ -36,6 +36,7 @@ login(Bin) ->
   end,
   lager:info("code : ~p", [Code]),
   lager:info("user info : ~p ", [UserInfo]),
+  down(UserInfo),
   player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121}).
 
 pub(_Bin) ->
@@ -45,3 +46,6 @@ pub(_Bin) ->
 id(Uid) -> put(user_id, Uid).
 id() -> get(user_id).
 base() -> maps:with([uid, name, logo], get(?PDict)).
+
+down(Player) ->
+  put(?PDict, Player).
