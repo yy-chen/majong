@@ -51,6 +51,7 @@ create(Bin) ->
 join(Bin) ->
   #req_join{id = RoomId} = majong_pb:decode_msg(Bin, req_join),
   Info = mod_play:base(),
+  lager:info("id : ~p", [RoomId]),
   case room:sync_exec(RoomId, {room_base, join, [Info#{pid => self()}]}) of
     {error, _} -> player:rsp(2, 2, #rsp_join{status = -1});
     #{room_info := RoomInfo, players := Players} ->
