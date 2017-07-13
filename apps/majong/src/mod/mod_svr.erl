@@ -20,7 +20,7 @@ init() ->
   case ets:info(?Name) of
     undefined ->
       ets:new(?Name, [{keypos, 1}, named_table, public, set,
-        {wirte_concurrency, true}, {read_concurrency, true}]);
+        {write_concurrency, true}, {read_concurrency, true}]);
     _ -> ok
   end.
 
