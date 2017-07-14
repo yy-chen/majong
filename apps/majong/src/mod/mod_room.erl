@@ -109,5 +109,5 @@ player2pb(Players) when is_list(Players) ->
   [player2pb(Player) || Player <- Players];
 player2pb(Player) ->
   lager:info("player : ~p", [Player]),
-  ok.
+  #pb_player{name = <<"123">>, uid = 666666666, logo = undefined, coins = 100}.
 
