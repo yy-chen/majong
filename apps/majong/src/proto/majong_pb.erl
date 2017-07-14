@@ -378,7 +378,7 @@ e_msg_rsp_login(Msg, TrUserData) ->
 
 
 e_msg_rsp_login(#rsp_login{status = F1, coins = F2,
-			   gems = F3},
+			   gems = F3, uid = F4, name = F5, logo = F6},
 		Bin, TrUserData) ->
     B1 = begin
 	   TrF1 = id(F1, TrUserData),
@@ -391,11 +391,32 @@ e_msg_rsp_login(#rsp_login{status = F1, coins = F2,
 		  e_type_int32(TrF2, <<B1/binary, 16>>)
 		end
 	 end,
-    if F3 == undefined -> B2;
+    B3 = if F3 == undefined -> B2;
+	    true ->
+		begin
+		  TrF3 = id(F3, TrUserData),
+		  e_type_int32(TrF3, <<B2/binary, 24>>)
+		end
+	 end,
+    B4 = if F4 == undefined -> B3;
+	    true ->
+		begin
+		  TrF4 = id(F4, TrUserData),
+		  e_type_int32(TrF4, <<B3/binary, 32>>)
+		end
+	 end,
+    B5 = if F5 == undefined -> B4;
+	    true ->
+		begin
+		  TrF5 = id(F5, TrUserData),
+		  e_type_string(TrF5, <<B4/binary, 42>>)
+		end
+	 end,
+    if F6 == undefined -> B5;
        true ->
 	   begin
-	     TrF3 = id(F3, TrUserData),
-	     e_type_int32(TrF3, <<B2/binary, 24>>)
+	     TrF6 = id(F6, TrUserData),
+	     e_type_string(TrF6, <<B5/binary, 50>>)
 	   end
     end.
 
@@ -2668,140 +2689,210 @@ d_msg_rsp_login(Bin, TrUserData) ->
     dfp_read_field_def_rsp_login(Bin, 0, 0,
 				 id(undefined, TrUserData),
 				 id(undefined, TrUserData),
+				 id(undefined, TrUserData),
+				 id(undefined, TrUserData),
+				 id(undefined, TrUserData),
 				 id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_login(<<8, Rest/binary>>, Z1, Z2,
-			     F1, F2, F3, TrUserData) ->
-    d_field_rsp_login_status(Rest, Z1, Z2, F1, F2, F3,
-			     TrUserData);
+			     F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_status(Rest, Z1, Z2, F1, F2, F3, F4,
+			     F5, F6, TrUserData);
 dfp_read_field_def_rsp_login(<<16, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, TrUserData) ->
-    d_field_rsp_login_coins(Rest, Z1, Z2, F1, F2, F3,
-			    TrUserData);
+			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_coins(Rest, Z1, Z2, F1, F2, F3, F4,
+			    F5, F6, TrUserData);
 dfp_read_field_def_rsp_login(<<24, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, TrUserData) ->
-    d_field_rsp_login_gems(Rest, Z1, Z2, F1, F2, F3,
-			   TrUserData);
-dfp_read_field_def_rsp_login(<<>>, 0, 0, F1, F2, F3,
-			     _) ->
-    #rsp_login{status = F1, coins = F2, gems = F3};
+			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_gems(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			   F6, TrUserData);
+dfp_read_field_def_rsp_login(<<32, Rest/binary>>, Z1,
+			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_uid(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			  F6, TrUserData);
+dfp_read_field_def_rsp_login(<<42, Rest/binary>>, Z1,
+			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_name(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			   F6, TrUserData);
+dfp_read_field_def_rsp_login(<<50, Rest/binary>>, Z1,
+			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+    d_field_rsp_login_logo(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			   F6, TrUserData);
+dfp_read_field_def_rsp_login(<<>>, 0, 0, F1, F2, F3, F4,
+			     F5, F6, _) ->
+    #rsp_login{status = F1, coins = F2, gems = F3, uid = F4,
+	       name = F5, logo = F6};
 dfp_read_field_def_rsp_login(Other, Z1, Z2, F1, F2, F3,
-			     TrUserData) ->
+			     F4, F5, F6, TrUserData) ->
     dg_read_field_def_rsp_login(Other, Z1, Z2, F1, F2, F3,
-				TrUserData).
+				F4, F5, F6, TrUserData).
 
 dg_read_field_def_rsp_login(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, TrUserData)
+			    N, Acc, F1, F2, F3, F4, F5, F6, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_login(Rest, N + 7, X bsl N + Acc,
-				F1, F2, F3, TrUserData);
+				F1, F2, F3, F4, F5, F6, TrUserData);
 dg_read_field_def_rsp_login(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, TrUserData) ->
+			    N, Acc, F1, F2, F3, F4, F5, F6, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_login_status(Rest, 0, 0, F1, F2, F3,
-				   TrUserData);
+	  d_field_rsp_login_status(Rest, 0, 0, F1, F2, F3, F4, F5,
+				   F6, TrUserData);
       16 ->
-	  d_field_rsp_login_coins(Rest, 0, 0, F1, F2, F3,
-				  TrUserData);
+	  d_field_rsp_login_coins(Rest, 0, 0, F1, F2, F3, F4, F5,
+				  F6, TrUserData);
       24 ->
-	  d_field_rsp_login_gems(Rest, 0, 0, F1, F2, F3,
-				 TrUserData);
+	  d_field_rsp_login_gems(Rest, 0, 0, F1, F2, F3, F4, F5,
+				 F6, TrUserData);
+      32 ->
+	  d_field_rsp_login_uid(Rest, 0, 0, F1, F2, F3, F4, F5,
+				F6, TrUserData);
+      42 ->
+	  d_field_rsp_login_name(Rest, 0, 0, F1, F2, F3, F4, F5,
+				 F6, TrUserData);
+      50 ->
+	  d_field_rsp_login_logo(Rest, 0, 0, F1, F2, F3, F4, F5,
+				 F6, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_login(Rest, 0, 0, F1, F2, F3,
-				      TrUserData);
+		skip_varint_rsp_login(Rest, 0, 0, F1, F2, F3, F4, F5,
+				      F6, TrUserData);
 	    1 ->
-		skip_64_rsp_login(Rest, 0, 0, F1, F2, F3, TrUserData);
+		skip_64_rsp_login(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
+				  TrUserData);
 	    2 ->
 		skip_length_delimited_rsp_login(Rest, 0, 0, F1, F2, F3,
-						TrUserData);
+						F4, F5, F6, TrUserData);
 	    5 ->
-		skip_32_rsp_login(Rest, 0, 0, F1, F2, F3, TrUserData)
+		skip_32_rsp_login(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
+				  TrUserData)
 	  end
     end;
-dg_read_field_def_rsp_login(<<>>, 0, 0, F1, F2, F3,
-			    _) ->
-    #rsp_login{status = F1, coins = F2, gems = F3}.
+dg_read_field_def_rsp_login(<<>>, 0, 0, F1, F2, F3, F4,
+			    F5, F6, _) ->
+    #rsp_login{status = F1, coins = F2, gems = F3, uid = F4,
+	       name = F5, logo = F6}.
 
 d_field_rsp_login_status(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F1, F2, F3, TrUserData)
+			 Acc, F1, F2, F3, F4, F5, F6, TrUserData)
     when N < 57 ->
     d_field_rsp_login_status(Rest, N + 7, X bsl N + Acc, F1,
-			     F2, F3, TrUserData);
+			     F2, F3, F4, F5, F6, TrUserData);
 d_field_rsp_login_status(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, _, F2, F3, TrUserData) ->
+			 Acc, _, F2, F3, F4, F5, F6, TrUserData) ->
     ZValue = X bsl N + Acc,
     NewFValue = if ZValue band 1 =:= 0 -> ZValue bsr 1;
 		   true -> -(ZValue + 1 bsr 1)
 		end,
     dfp_read_field_def_rsp_login(Rest, 0, 0, NewFValue, F2,
-				 F3, TrUserData).
+				 F3, F4, F5, F6, TrUserData).
 
 
 d_field_rsp_login_coins(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, TrUserData)
     when N < 57 ->
     d_field_rsp_login_coins(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, TrUserData);
+			    F2, F3, F4, F5, F6, TrUserData);
 d_field_rsp_login_coins(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, _, F3, TrUserData) ->
+			Acc, F1, _, F3, F4, F5, F6, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_login(Rest, 0, 0, F1, NewFValue,
-				 F3, TrUserData).
+				 F3, F4, F5, F6, TrUserData).
 
 
 d_field_rsp_login_gems(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, TrUserData)
+		       Acc, F1, F2, F3, F4, F5, F6, TrUserData)
     when N < 57 ->
     d_field_rsp_login_gems(Rest, N + 7, X bsl N + Acc, F1,
-			   F2, F3, TrUserData);
+			   F2, F3, F4, F5, F6, TrUserData);
 d_field_rsp_login_gems(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, _, TrUserData) ->
+		       Acc, F1, F2, _, F4, F5, F6, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_login(Rest, 0, 0, F1, F2,
-				 NewFValue, TrUserData).
+				 NewFValue, F4, F5, F6, TrUserData).
+
+
+d_field_rsp_login_uid(<<1:1, X:7, Rest/binary>>, N, Acc,
+		      F1, F2, F3, F4, F5, F6, TrUserData)
+    when N < 57 ->
+    d_field_rsp_login_uid(Rest, N + 7, X bsl N + Acc, F1,
+			  F2, F3, F4, F5, F6, TrUserData);
+d_field_rsp_login_uid(<<0:1, X:7, Rest/binary>>, N, Acc,
+		      F1, F2, F3, _, F5, F6, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_login(Rest, 0, 0, F1, F2, F3,
+				 NewFValue, F5, F6, TrUserData).
+
+
+d_field_rsp_login_name(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+    when N < 57 ->
+    d_field_rsp_login_name(Rest, N + 7, X bsl N + Acc, F1,
+			   F2, F3, F4, F5, F6, TrUserData);
+d_field_rsp_login_name(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, F3, F4, _, F6, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_rsp_login(Rest2, 0, 0, F1, F2, F3,
+				 F4, NewFValue, F6, TrUserData).
+
+
+d_field_rsp_login_logo(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+    when N < 57 ->
+    d_field_rsp_login_logo(Rest, N + 7, X bsl N + Acc, F1,
+			   F2, F3, F4, F5, F6, TrUserData);
+d_field_rsp_login_logo(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, F3, F4, F5, _, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_rsp_login(Rest2, 0, 0, F1, F2, F3,
+				 F4, F5, NewFValue, TrUserData).
 
 
 skip_varint_rsp_login(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, TrUserData) ->
-    skip_varint_rsp_login(Rest, Z1, Z2, F1, F2, F3,
-			  TrUserData);
+		      F1, F2, F3, F4, F5, F6, TrUserData) ->
+    skip_varint_rsp_login(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			  F6, TrUserData);
 skip_varint_rsp_login(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, TrUserData) ->
     dfp_read_field_def_rsp_login(Rest, Z1, Z2, F1, F2, F3,
-				 TrUserData).
+				 F4, F5, F6, TrUserData).
 
 
 skip_length_delimited_rsp_login(<<1:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, TrUserData)
+				N, Acc, F1, F2, F3, F4, F5, F6, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_login(Rest, N + 7,
-				    X bsl N + Acc, F1, F2, F3, TrUserData);
+				    X bsl N + Acc, F1, F2, F3, F4, F5, F6,
+				    TrUserData);
 skip_length_delimited_rsp_login(<<0:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, TrUserData) ->
+				N, Acc, F1, F2, F3, F4, F5, F6, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_rsp_login(Rest2, 0, 0, F1, F2, F3,
-				 TrUserData).
+				 F4, F5, F6, TrUserData).
 
 
 skip_32_rsp_login(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, TrUserData) ->
+		  F3, F4, F5, F6, TrUserData) ->
     dfp_read_field_def_rsp_login(Rest, Z1, Z2, F1, F2, F3,
-				 TrUserData).
+				 F4, F5, F6, TrUserData).
 
 
 skip_64_rsp_login(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, TrUserData) ->
+		  F3, F4, F5, F6, TrUserData) ->
     dfp_read_field_def_rsp_login(Rest, Z1, Z2, F1, F2, F3,
-				 TrUserData).
+				 F4, F5, F6, TrUserData).
 
 
 d_msg_req_create_room(Bin, TrUserData) ->
@@ -3864,9 +3955,11 @@ merge_msg_rsp_new_player(#rsp_new_player{player =
 			end}.
 
 merge_msg_rsp_login(#rsp_login{coins = PFcoins,
-			       gems = PFgems},
+			       gems = PFgems, uid = PFuid, name = PFname,
+			       logo = PFlogo},
 		    #rsp_login{status = NFstatus, coins = NFcoins,
-			       gems = NFgems},
+			       gems = NFgems, uid = NFuid, name = NFname,
+			       logo = NFlogo},
 		    _) ->
     #rsp_login{status = NFstatus,
 	       coins =
@@ -3876,6 +3969,18 @@ merge_msg_rsp_login(#rsp_login{coins = PFcoins,
 	       gems =
 		   if NFgems =:= undefined -> PFgems;
 		      true -> NFgems
+		   end,
+	       uid =
+		   if NFuid =:= undefined -> PFuid;
+		      true -> NFuid
+		   end,
+	       name =
+		   if NFname =:= undefined -> PFname;
+		      true -> NFname
+		   end,
+	       logo =
+		   if NFlogo =:= undefined -> PFlogo;
+		      true -> NFlogo
 		   end}.
 
 merge_msg_req_create_room(#req_create_room{},
@@ -4131,7 +4236,7 @@ v_msg_rsp_new_player(#rsp_new_player{player = F1}, Path,
 
 -dialyzer({nowarn_function,v_msg_rsp_login/3}).
 v_msg_rsp_login(#rsp_login{status = F1, coins = F2,
-			   gems = F3},
+			   gems = F3, uid = F4, name = F5, logo = F6},
 		Path, _) ->
     v_type_sint32(F1, [status | Path]),
     if F2 == undefined -> ok;
@@ -4139,6 +4244,15 @@ v_msg_rsp_login(#rsp_login{status = F1, coins = F2,
     end,
     if F3 == undefined -> ok;
        true -> v_type_int32(F3, [gems | Path])
+    end,
+    if F4 == undefined -> ok;
+       true -> v_type_int32(F4, [uid | Path])
+    end,
+    if F5 == undefined -> ok;
+       true -> v_type_string(F5, [name | Path])
+    end,
+    if F6 == undefined -> ok;
+       true -> v_type_string(F6, [logo | Path])
     end,
     ok.
 
@@ -4353,6 +4467,12 @@ get_msg_defs() ->
        #field{name = coins, fnum = 2, rnum = 3, type = int32,
 	      occurrence = optional, opts = []},
        #field{name = gems, fnum = 3, rnum = 4, type = int32,
+	      occurrence = optional, opts = []},
+       #field{name = uid, fnum = 4, rnum = 5, type = int32,
+	      occurrence = optional, opts = []},
+       #field{name = name, fnum = 5, rnum = 6, type = string,
+	      occurrence = optional, opts = []},
+       #field{name = logo, fnum = 6, rnum = 7, type = string,
 	      occurrence = optional, opts = []}]},
      {{msg, req_create_room},
       [#field{name = round, fnum = 1, rnum = 2, type = int32,
@@ -4511,6 +4631,12 @@ find_msg_def(rsp_login) ->
      #field{name = coins, fnum = 2, rnum = 3, type = int32,
 	    occurrence = optional, opts = []},
      #field{name = gems, fnum = 3, rnum = 4, type = int32,
+	    occurrence = optional, opts = []},
+     #field{name = uid, fnum = 4, rnum = 5, type = int32,
+	    occurrence = optional, opts = []},
+     #field{name = name, fnum = 5, rnum = 6, type = string,
+	    occurrence = optional, opts = []},
+     #field{name = logo, fnum = 6, rnum = 7, type = string,
 	    occurrence = optional, opts = []}];
 find_msg_def(req_create_room) ->
     [#field{name = round, fnum = 1, rnum = 2, type = int32,

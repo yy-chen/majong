@@ -16,16 +16,18 @@
 -export([
   create/1,
   join/1,
-  leave/1
+  leave/1,
+  ready/2,
+  start/1
 ]).
 
 %%% players => [#{uid => 1, logo => 2, name => 3}]
 %%% owner => int()
 %%% room_info => #{round => int(), pay => int(), banker => int(), special => int(), type => int()}
 %%% ready => []
-create(#{player := PlayerInfo, room_id := _RoomId, room_info := RoomInfo}) ->
+create(#{player := PlayerInfo, room_id := RoomId, room_info := RoomInfo}) ->
   #{uid := Uid} = PlayerInfo,
-  down(#{players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo, num => 1, ready => [], state => ?Ready}).
+  down(#{players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo#{room_id => RoomId, owner => Uid}, num => 1, ready => [], state => ?Ready}).
 
 join(Player) ->
   #{players := Players, num := Num} = Room = load(),

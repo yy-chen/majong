@@ -37,7 +37,9 @@ login(Bin) ->
   lager:info("code : ~p", [Code]),
   lager:info("user info : ~p ", [UserInfo]),
   down(UserInfo),
-  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121}).
+  Logo = maps:get(logo, UserInfo, undefined),
+  Name = maps:get(name, UserInfo, undefined),
+  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121, logo = Logo, name = Name}).
 
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),

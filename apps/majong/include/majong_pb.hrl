@@ -156,7 +156,10 @@
 -record(rsp_login,
         {status,                        % = 1, sint32
          coins,                         % = 2, int32 (optional)
-         gems                           % = 3, int32 (optional)
+         gems,                          % = 3, int32 (optional)
+         uid,                           % = 4, int32 (optional)
+         name,                          % = 5, string (optional)
+         logo                           % = 6, string (optional)
         }).
 -endif.
 
