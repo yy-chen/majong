@@ -18,7 +18,8 @@
   join/1,
   leave/1,
   ready/2,
-  start/1
+  start/1,
+  chat/3
 ]).
 
 %%% players => [#{uid => 1, logo => 2, name => 3}]
@@ -71,6 +72,10 @@ start(Uid) ->
         Uid -> multi_cast(Players, {mod_room, game_start, [Uid]})
       end
   end.
+
+chat(Uid, Url, Msg) ->
+  #{players := Players} = load(),
+  multi_cast(Players, {mod_room, player_chat, [#{uid => Uid, msg => Msg, url => Url}]}).
 
 down(RoomInfo) ->
   put(?PDict, RoomInfo).

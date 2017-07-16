@@ -189,6 +189,15 @@
         }).
 -endif.
 
+-ifndef('RSP_PLAYER_CHAT_PB_H').
+-define('RSP_PLAYER_CHAT_PB_H', true).
+-record(rsp_player_chat,
+        {msg,                           % = 1, string (optional)
+         url,                           % = 2, string (optional)
+         uid                            % = 3, int32
+        }).
+-endif.
+
 -ifndef('RSP_RESULT_PB_H').
 -define('RSP_RESULT_PB_H', true).
 -record(rsp_result,
@@ -203,6 +212,13 @@
         }).
 -endif.
 
+-ifndef('RSP_CHAT_PB_H').
+-define('RSP_CHAT_PB_H', true).
+-record(rsp_chat,
+        {status                         % = 1, int32
+        }).
+-endif.
+
 -ifndef('REQ_SCORE_PB_H').
 -define('REQ_SCORE_PB_H', true).
 -record(req_score,
@@ -214,6 +230,14 @@
 -define('REQ_LEAVE_PB_H', true).
 -record(req_leave,
         {uid                            % = 1, int32
+        }).
+-endif.
+
+-ifndef('REQ_CHAT_PB_H').
+-define('REQ_CHAT_PB_H', true).
+-record(req_chat,
+        {msg,                           % = 1, string (optional)
+         voice                          % = 2, string (optional)
         }).
 -endif.
 

@@ -68,10 +68,14 @@ encode_msg(Msg, Opts) ->
       #rsp_player_ready{} ->
 	  e_msg_rsp_player_ready(Msg, TrUserData);
       #rsp_ready{} -> e_msg_rsp_ready(Msg, TrUserData);
+      #rsp_player_chat{} ->
+	  e_msg_rsp_player_chat(Msg, TrUserData);
       #rsp_result{} -> e_msg_rsp_result(Msg, TrUserData);
       #req_start{} -> e_msg_req_start(Msg, TrUserData);
+      #rsp_chat{} -> e_msg_rsp_chat(Msg, TrUserData);
       #req_score{} -> e_msg_req_score(Msg, TrUserData);
       #req_leave{} -> e_msg_req_leave(Msg, TrUserData);
+      #req_chat{} -> e_msg_req_chat(Msg, TrUserData);
       #rsp_pub{} -> e_msg_rsp_pub(Msg, TrUserData);
       #req_pub{} -> e_msg_req_pub(Msg, TrUserData)
     end.
@@ -476,9 +480,46 @@ e_msg_rsp_ready(#rsp_ready{status = F1}, Bin,
       e_type_sint(TrF1, <<Bin/binary, 8>>)
     end.
 
+e_msg_rsp_player_chat(Msg, TrUserData) ->
+    e_msg_rsp_player_chat(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_player_chat(#rsp_player_chat{msg = F1,
+				       url = F2, uid = F3},
+		      Bin, TrUserData) ->
+    B1 = if F1 == undefined -> Bin;
+	    true ->
+		begin
+		  TrF1 = id(F1, TrUserData),
+		  e_type_string(TrF1, <<Bin/binary, 10>>)
+		end
+	 end,
+    B2 = if F2 == undefined -> B1;
+	    true ->
+		begin
+		  TrF2 = id(F2, TrUserData),
+		  e_type_string(TrF2, <<B1/binary, 18>>)
+		end
+	 end,
+    begin
+      TrF3 = id(F3, TrUserData),
+      e_type_int32(TrF3, <<B2/binary, 24>>)
+    end.
+
 e_msg_rsp_result(_Msg, _TrUserData) -> <<>>.
 
 e_msg_req_start(_Msg, _TrUserData) -> <<>>.
+
+e_msg_rsp_chat(Msg, TrUserData) ->
+    e_msg_rsp_chat(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_chat(#rsp_chat{status = F1}, Bin,
+	       TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
 
 e_msg_req_score(Msg, TrUserData) ->
     e_msg_req_score(Msg, <<>>, TrUserData).
@@ -500,6 +541,27 @@ e_msg_req_leave(#req_leave{uid = F1}, Bin,
     begin
       TrF1 = id(F1, TrUserData),
       e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_req_chat(Msg, TrUserData) ->
+    e_msg_req_chat(Msg, <<>>, TrUserData).
+
+
+e_msg_req_chat(#req_chat{msg = F1, voice = F2}, Bin,
+	       TrUserData) ->
+    B1 = if F1 == undefined -> Bin;
+	    true ->
+		begin
+		  TrF1 = id(F1, TrUserData),
+		  e_type_string(TrF1, <<Bin/binary, 10>>)
+		end
+	 end,
+    if F2 == undefined -> B1;
+       true ->
+	   begin
+	     TrF2 = id(F2, TrUserData),
+	     e_type_string(TrF2, <<B1/binary, 18>>)
+	   end
     end.
 
 e_msg_rsp_pub(Msg, TrUserData) ->
@@ -605,10 +667,14 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_player_ready ->
 	  d_msg_rsp_player_ready(Bin, TrUserData);
       rsp_ready -> d_msg_rsp_ready(Bin, TrUserData);
+      rsp_player_chat ->
+	  d_msg_rsp_player_chat(Bin, TrUserData);
       rsp_result -> d_msg_rsp_result(Bin, TrUserData);
       req_start -> d_msg_req_start(Bin, TrUserData);
+      rsp_chat -> d_msg_rsp_chat(Bin, TrUserData);
       req_score -> d_msg_req_score(Bin, TrUserData);
       req_leave -> d_msg_req_leave(Bin, TrUserData);
+      req_chat -> d_msg_req_chat(Bin, TrUserData);
       rsp_pub -> d_msg_rsp_pub(Bin, TrUserData);
       req_pub -> d_msg_req_pub(Bin, TrUserData)
     end.
@@ -3300,6 +3366,151 @@ skip_64_rsp_ready(<<_:64, Rest/binary>>, Z1, Z2, F1,
 				 TrUserData).
 
 
+d_msg_rsp_player_chat(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_player_chat(Bin, 0, 0,
+				       id(undefined, TrUserData),
+				       id(undefined, TrUserData),
+				       id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_player_chat(<<10, Rest/binary>>,
+				   Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_chat_msg(Rest, Z1, Z2, F1, F2, F3,
+				TrUserData);
+dfp_read_field_def_rsp_player_chat(<<18, Rest/binary>>,
+				   Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_chat_url(Rest, Z1, Z2, F1, F2, F3,
+				TrUserData);
+dfp_read_field_def_rsp_player_chat(<<24, Rest/binary>>,
+				   Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_chat_uid(Rest, Z1, Z2, F1, F2, F3,
+				TrUserData);
+dfp_read_field_def_rsp_player_chat(<<>>, 0, 0, F1, F2,
+				   F3, _) ->
+    #rsp_player_chat{msg = F1, url = F2, uid = F3};
+dfp_read_field_def_rsp_player_chat(Other, Z1, Z2, F1,
+				   F2, F3, TrUserData) ->
+    dg_read_field_def_rsp_player_chat(Other, Z1, Z2, F1, F2,
+				      F3, TrUserData).
+
+dg_read_field_def_rsp_player_chat(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, F2, F3, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_player_chat(Rest, N + 7,
+				      X bsl N + Acc, F1, F2, F3, TrUserData);
+dg_read_field_def_rsp_player_chat(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, F2, F3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_rsp_player_chat_msg(Rest, 0, 0, F1, F2, F3,
+				      TrUserData);
+      18 ->
+	  d_field_rsp_player_chat_url(Rest, 0, 0, F1, F2, F3,
+				      TrUserData);
+      24 ->
+	  d_field_rsp_player_chat_uid(Rest, 0, 0, F1, F2, F3,
+				      TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_rsp_player_chat(Rest, 0, 0, F1, F2, F3,
+					    TrUserData);
+	    1 ->
+		skip_64_rsp_player_chat(Rest, 0, 0, F1, F2, F3,
+					TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_player_chat(Rest, 0, 0, F1,
+						      F2, F3, TrUserData);
+	    5 ->
+		skip_32_rsp_player_chat(Rest, 0, 0, F1, F2, F3,
+					TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_player_chat(<<>>, 0, 0, F1, F2,
+				  F3, _) ->
+    #rsp_player_chat{msg = F1, url = F2, uid = F3}.
+
+d_field_rsp_player_chat_msg(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_rsp_player_chat_msg(Rest, N + 7, X bsl N + Acc,
+				F1, F2, F3, TrUserData);
+d_field_rsp_player_chat_msg(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, _, F2, F3, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_rsp_player_chat(Rest2, 0, 0,
+				       NewFValue, F2, F3, TrUserData).
+
+
+d_field_rsp_player_chat_url(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_rsp_player_chat_url(Rest, N + 7, X bsl N + Acc,
+				F1, F2, F3, TrUserData);
+d_field_rsp_player_chat_url(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F1, _, F3, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_rsp_player_chat(Rest2, 0, 0, F1,
+				       NewFValue, F3, TrUserData).
+
+
+d_field_rsp_player_chat_uid(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_rsp_player_chat_uid(Rest, N + 7, X bsl N + Acc,
+				F1, F2, F3, TrUserData);
+d_field_rsp_player_chat_uid(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F1, F2, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_player_chat(Rest, 0, 0, F1, F2,
+				       NewFValue, TrUserData).
+
+
+skip_varint_rsp_player_chat(<<1:1, _:7, Rest/binary>>,
+			    Z1, Z2, F1, F2, F3, TrUserData) ->
+    skip_varint_rsp_player_chat(Rest, Z1, Z2, F1, F2, F3,
+				TrUserData);
+skip_varint_rsp_player_chat(<<0:1, _:7, Rest/binary>>,
+			    Z1, Z2, F1, F2, F3, TrUserData) ->
+    dfp_read_field_def_rsp_player_chat(Rest, Z1, Z2, F1, F2,
+				       F3, TrUserData).
+
+
+skip_length_delimited_rsp_player_chat(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_player_chat(Rest, N + 7,
+					  X bsl N + Acc, F1, F2, F3,
+					  TrUserData);
+skip_length_delimited_rsp_player_chat(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F1, F2, F3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_player_chat(Rest2, 0, 0, F1, F2,
+				       F3, TrUserData).
+
+
+skip_32_rsp_player_chat(<<_:32, Rest/binary>>, Z1, Z2,
+			F1, F2, F3, TrUserData) ->
+    dfp_read_field_def_rsp_player_chat(Rest, Z1, Z2, F1, F2,
+				       F3, TrUserData).
+
+
+skip_64_rsp_player_chat(<<_:64, Rest/binary>>, Z1, Z2,
+			F1, F2, F3, TrUserData) ->
+    dfp_read_field_def_rsp_player_chat(Rest, Z1, Z2, F1, F2,
+				       F3, TrUserData).
+
+
 d_msg_rsp_result(Bin, TrUserData) ->
     dfp_read_field_def_rsp_result(Bin, 0, 0, TrUserData).
 
@@ -3417,6 +3628,93 @@ skip_32_req_start(<<_:32, Rest/binary>>, Z1, Z2,
 skip_64_req_start(<<_:64, Rest/binary>>, Z1, Z2,
 		  TrUserData) ->
     dfp_read_field_def_req_start(Rest, Z1, Z2, TrUserData).
+
+
+d_msg_rsp_chat(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_chat(Bin, 0, 0,
+				id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_chat(<<8, Rest/binary>>, Z1, Z2,
+			    F1, TrUserData) ->
+    d_field_rsp_chat_status(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_rsp_chat(<<>>, 0, 0, F1, _) ->
+    #rsp_chat{status = F1};
+dfp_read_field_def_rsp_chat(Other, Z1, Z2, F1,
+			    TrUserData) ->
+    dg_read_field_def_rsp_chat(Other, Z1, Z2, F1,
+			       TrUserData).
+
+dg_read_field_def_rsp_chat(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_chat(Rest, N + 7, X bsl N + Acc,
+			       F1, TrUserData);
+dg_read_field_def_rsp_chat(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_rsp_chat_status(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_rsp_chat(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_chat(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_chat(Rest, 0, 0, F1,
+					       TrUserData);
+	    5 -> skip_32_rsp_chat(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_chat(<<>>, 0, 0, F1, _) ->
+    #rsp_chat{status = F1}.
+
+d_field_rsp_chat_status(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_chat_status(Rest, N + 7, X bsl N + Acc, F1,
+			    TrUserData);
+d_field_rsp_chat_status(<<0:1, X:7, Rest/binary>>, N,
+			Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_chat(Rest, 0, 0, NewFValue,
+				TrUserData).
+
+
+skip_varint_rsp_chat(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    skip_varint_rsp_chat(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_rsp_chat(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    dfp_read_field_def_rsp_chat(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_length_delimited_rsp_chat(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_chat(Rest, N + 7,
+				   X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_rsp_chat(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_chat(Rest2, 0, 0, F1,
+				TrUserData).
+
+
+skip_32_rsp_chat(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_chat(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_64_rsp_chat(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_chat(Rest, Z1, Z2, F1,
+				TrUserData).
 
 
 d_msg_req_score(Bin, TrUserData) ->
@@ -3590,6 +3888,116 @@ skip_64_req_leave(<<_:64, Rest/binary>>, Z1, Z2, F1,
 		  TrUserData) ->
     dfp_read_field_def_req_leave(Rest, Z1, Z2, F1,
 				 TrUserData).
+
+
+d_msg_req_chat(Bin, TrUserData) ->
+    dfp_read_field_def_req_chat(Bin, 0, 0,
+				id(undefined, TrUserData),
+				id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_req_chat(<<10, Rest/binary>>, Z1, Z2,
+			    F1, F2, TrUserData) ->
+    d_field_req_chat_msg(Rest, Z1, Z2, F1, F2, TrUserData);
+dfp_read_field_def_req_chat(<<18, Rest/binary>>, Z1, Z2,
+			    F1, F2, TrUserData) ->
+    d_field_req_chat_voice(Rest, Z1, Z2, F1, F2,
+			   TrUserData);
+dfp_read_field_def_req_chat(<<>>, 0, 0, F1, F2, _) ->
+    #req_chat{msg = F1, voice = F2};
+dfp_read_field_def_req_chat(Other, Z1, Z2, F1, F2,
+			    TrUserData) ->
+    dg_read_field_def_req_chat(Other, Z1, Z2, F1, F2,
+			       TrUserData).
+
+dg_read_field_def_req_chat(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, F2, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_chat(Rest, N + 7, X bsl N + Acc,
+			       F1, F2, TrUserData);
+dg_read_field_def_req_chat(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F1, F2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_req_chat_msg(Rest, 0, 0, F1, F2, TrUserData);
+      18 ->
+	  d_field_req_chat_voice(Rest, 0, 0, F1, F2, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_req_chat(Rest, 0, 0, F1, F2, TrUserData);
+	    1 -> skip_64_req_chat(Rest, 0, 0, F1, F2, TrUserData);
+	    2 ->
+		skip_length_delimited_req_chat(Rest, 0, 0, F1, F2,
+					       TrUserData);
+	    5 -> skip_32_req_chat(Rest, 0, 0, F1, F2, TrUserData)
+	  end
+    end;
+dg_read_field_def_req_chat(<<>>, 0, 0, F1, F2, _) ->
+    #req_chat{msg = F1, voice = F2}.
+
+d_field_req_chat_msg(<<1:1, X:7, Rest/binary>>, N, Acc,
+		     F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_req_chat_msg(Rest, N + 7, X bsl N + Acc, F1, F2,
+			 TrUserData);
+d_field_req_chat_msg(<<0:1, X:7, Rest/binary>>, N, Acc,
+		     _, F2, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_req_chat(Rest2, 0, 0, NewFValue, F2,
+				TrUserData).
+
+
+d_field_req_chat_voice(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_req_chat_voice(Rest, N + 7, X bsl N + Acc, F1,
+			   F2, TrUserData);
+d_field_req_chat_voice(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F1, _, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_req_chat(Rest2, 0, 0, F1, NewFValue,
+				TrUserData).
+
+
+skip_varint_req_chat(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, F2, TrUserData) ->
+    skip_varint_req_chat(Rest, Z1, Z2, F1, F2, TrUserData);
+skip_varint_req_chat(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, F2, TrUserData) ->
+    dfp_read_field_def_req_chat(Rest, Z1, Z2, F1, F2,
+				TrUserData).
+
+
+skip_length_delimited_req_chat(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_chat(Rest, N + 7,
+				   X bsl N + Acc, F1, F2, TrUserData);
+skip_length_delimited_req_chat(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, F2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_chat(Rest2, 0, 0, F1, F2,
+				TrUserData).
+
+
+skip_32_req_chat(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
+		 TrUserData) ->
+    dfp_read_field_def_req_chat(Rest, Z1, Z2, F1, F2,
+				TrUserData).
+
+
+skip_64_req_chat(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
+		 TrUserData) ->
+    dfp_read_field_def_req_chat(Rest, Z1, Z2, F1, F2,
+				TrUserData).
 
 
 d_msg_rsp_pub(Bin, TrUserData) ->
@@ -3809,14 +4217,20 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_rsp_player_ready(Prev, New, TrUserData);
       #rsp_ready{} ->
 	  merge_msg_rsp_ready(Prev, New, TrUserData);
+      #rsp_player_chat{} ->
+	  merge_msg_rsp_player_chat(Prev, New, TrUserData);
       #rsp_result{} ->
 	  merge_msg_rsp_result(Prev, New, TrUserData);
       #req_start{} ->
 	  merge_msg_req_start(Prev, New, TrUserData);
+      #rsp_chat{} ->
+	  merge_msg_rsp_chat(Prev, New, TrUserData);
       #req_score{} ->
 	  merge_msg_req_score(Prev, New, TrUserData);
       #req_leave{} ->
 	  merge_msg_req_leave(Prev, New, TrUserData);
+      #req_chat{} ->
+	  merge_msg_req_chat(Prev, New, TrUserData);
       #rsp_pub{} -> merge_msg_rsp_pub(Prev, New, TrUserData);
       #req_pub{} -> merge_msg_req_pub(Prev, New, TrUserData)
     end.
@@ -3999,9 +4413,28 @@ merge_msg_rsp_ready(#rsp_ready{},
 		    #rsp_ready{status = NFstatus}, _) ->
     #rsp_ready{status = NFstatus}.
 
+merge_msg_rsp_player_chat(#rsp_player_chat{msg = PFmsg,
+					   url = PFurl},
+			  #rsp_player_chat{msg = NFmsg, url = NFurl,
+					   uid = NFuid},
+			  _) ->
+    #rsp_player_chat{msg =
+			 if NFmsg =:= undefined -> PFmsg;
+			    true -> NFmsg
+			 end,
+		     url =
+			 if NFurl =:= undefined -> PFurl;
+			    true -> NFurl
+			 end,
+		     uid = NFuid}.
+
 merge_msg_rsp_result(_Prev, New, _TrUserData) -> New.
 
 merge_msg_req_start(_Prev, New, _TrUserData) -> New.
+
+merge_msg_rsp_chat(#rsp_chat{},
+		   #rsp_chat{status = NFstatus}, _) ->
+    #rsp_chat{status = NFstatus}.
 
 merge_msg_req_score(#req_score{},
 		    #req_score{score = NFscore}, _) ->
@@ -4010,6 +4443,18 @@ merge_msg_req_score(#req_score{},
 merge_msg_req_leave(#req_leave{},
 		    #req_leave{uid = NFuid}, _) ->
     #req_leave{uid = NFuid}.
+
+merge_msg_req_chat(#req_chat{msg = PFmsg,
+			     voice = PFvoice},
+		   #req_chat{msg = NFmsg, voice = NFvoice}, _) ->
+    #req_chat{msg =
+		  if NFmsg =:= undefined -> PFmsg;
+		     true -> NFmsg
+		  end,
+	      voice =
+		  if NFvoice =:= undefined -> PFvoice;
+		     true -> NFvoice
+		  end}.
 
 merge_msg_rsp_pub(#rsp_pub{pub = PFpub},
 		  #rsp_pub{status = NFstatus, pub = NFpub}, _) ->
@@ -4078,14 +4523,21 @@ verify_msg(Msg, Opts) ->
 				 TrUserData);
       #rsp_ready{} ->
 	  v_msg_rsp_ready(Msg, [rsp_ready], TrUserData);
+      #rsp_player_chat{} ->
+	  v_msg_rsp_player_chat(Msg, [rsp_player_chat],
+				TrUserData);
       #rsp_result{} ->
 	  v_msg_rsp_result(Msg, [rsp_result], TrUserData);
       #req_start{} ->
 	  v_msg_req_start(Msg, [req_start], TrUserData);
+      #rsp_chat{} ->
+	  v_msg_rsp_chat(Msg, [rsp_chat], TrUserData);
       #req_score{} ->
 	  v_msg_req_score(Msg, [req_score], TrUserData);
       #req_leave{} ->
 	  v_msg_req_leave(Msg, [req_leave], TrUserData);
+      #req_chat{} ->
+	  v_msg_req_chat(Msg, [req_chat], TrUserData);
       #rsp_pub{} -> v_msg_rsp_pub(Msg, [rsp_pub], TrUserData);
       #req_pub{} -> v_msg_req_pub(Msg, [req_pub], TrUserData);
       _ -> mk_type_error(not_a_known_message, Msg, [])
@@ -4280,11 +4732,28 @@ v_msg_rsp_player_ready(#rsp_player_ready{uid = F1,
 v_msg_rsp_ready(#rsp_ready{status = F1}, Path, _) ->
     v_type_sint32(F1, [status | Path]), ok.
 
+-dialyzer({nowarn_function,v_msg_rsp_player_chat/3}).
+v_msg_rsp_player_chat(#rsp_player_chat{msg = F1,
+				       url = F2, uid = F3},
+		      Path, _) ->
+    if F1 == undefined -> ok;
+       true -> v_type_string(F1, [msg | Path])
+    end,
+    if F2 == undefined -> ok;
+       true -> v_type_string(F2, [url | Path])
+    end,
+    v_type_int32(F3, [uid | Path]),
+    ok.
+
 -dialyzer({nowarn_function,v_msg_rsp_result/3}).
 v_msg_rsp_result(#rsp_result{}, _Path, _) -> ok.
 
 -dialyzer({nowarn_function,v_msg_req_start/3}).
 v_msg_req_start(#req_start{}, _Path, _) -> ok.
+
+-dialyzer({nowarn_function,v_msg_rsp_chat/3}).
+v_msg_rsp_chat(#rsp_chat{status = F1}, Path, _) ->
+    v_type_int32(F1, [status | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_req_score/3}).
 v_msg_req_score(#req_score{score = F1}, Path, _) ->
@@ -4293,6 +4762,17 @@ v_msg_req_score(#req_score{score = F1}, Path, _) ->
 -dialyzer({nowarn_function,v_msg_req_leave/3}).
 v_msg_req_leave(#req_leave{uid = F1}, Path, _) ->
     v_type_int32(F1, [uid | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_req_chat/3}).
+v_msg_req_chat(#req_chat{msg = F1, voice = F2}, Path,
+	       _) ->
+    if F1 == undefined -> ok;
+       true -> v_type_string(F1, [msg | Path])
+    end,
+    if F2 == undefined -> ok;
+       true -> v_type_string(F2, [voice | Path])
+    end,
+    ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_pub/3}).
 v_msg_rsp_pub(#rsp_pub{status = F1, pub = F2}, Path,
@@ -4493,13 +4973,28 @@ get_msg_defs() ->
      {{msg, rsp_ready},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []}]},
+     {{msg, rsp_player_chat},
+      [#field{name = msg, fnum = 1, rnum = 2, type = string,
+	      occurrence = optional, opts = []},
+       #field{name = url, fnum = 2, rnum = 3, type = string,
+	      occurrence = optional, opts = []},
+       #field{name = uid, fnum = 3, rnum = 4, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, rsp_result}, []}, {{msg, req_start}, []},
+     {{msg, rsp_chat},
+      [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, req_score},
       [#field{name = score, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
      {{msg, req_leave},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
+     {{msg, req_chat},
+      [#field{name = msg, fnum = 1, rnum = 2, type = string,
+	      occurrence = optional, opts = []},
+       #field{name = voice, fnum = 2, rnum = 3, type = string,
+	      occurrence = optional, opts = []}]},
      {{msg, rsp_pub},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []},
@@ -4515,8 +5010,8 @@ get_msg_names() ->
      rsp_player_leave, rsp_leave, rsp_player_score,
      rsp_score, rsp_zhuang_end, rsp_new_player, rsp_login,
      req_create_room, rsp_player_ready, rsp_ready,
-     rsp_result, req_start, req_score, req_leave, rsp_pub,
-     req_pub].
+     rsp_player_chat, rsp_result, req_start, rsp_chat,
+     req_score, req_leave, req_chat, rsp_pub, req_pub].
 
 
 get_enum_names() -> [].
@@ -4657,14 +5152,29 @@ find_msg_def(rsp_player_ready) ->
 find_msg_def(rsp_ready) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []}];
+find_msg_def(rsp_player_chat) ->
+    [#field{name = msg, fnum = 1, rnum = 2, type = string,
+	    occurrence = optional, opts = []},
+     #field{name = url, fnum = 2, rnum = 3, type = string,
+	    occurrence = optional, opts = []},
+     #field{name = uid, fnum = 3, rnum = 4, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(rsp_result) -> [];
 find_msg_def(req_start) -> [];
+find_msg_def(rsp_chat) ->
+    [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(req_score) ->
     [#field{name = score, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
 find_msg_def(req_leave) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
+find_msg_def(req_chat) ->
+    [#field{name = msg, fnum = 1, rnum = 2, type = string,
+	    occurrence = optional, opts = []},
+     #field{name = voice, fnum = 2, rnum = 3, type = string,
+	    occurrence = optional, opts = []}];
 find_msg_def(rsp_pub) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []},

@@ -18,7 +18,8 @@
   player_leave/1,
   player_ready/2,
   game_start/0,
-  game_start/1
+  game_start/1,
+  player_chat/1
 ]).
 
 %%#{room_id => int()}
@@ -29,7 +30,8 @@ dispatch(C, Bin) ->
     2 -> join(Bin);
     4 -> leave();
     6 -> ready(Bin);
-    8 -> start()
+    8 -> start();
+    16 -> chat(Bin)
   end.
 
 create(Bin) ->
@@ -93,6 +95,20 @@ start() ->
 
 game_start() -> player:rsp(2, 9, #rsp_game_start{}).     %%抢庄模式 没庄家
 game_start(Uid) -> player:rsp(2, 9, #rsp_game_start{uid = Uid}).
+
+chat(Bin) ->
+  #req_chat{msg = Msg, voice = Voice} = majong_pb:decode_msg(Bin, req_chat),
+  Url = ali_file:upload(binary_to_list(Voice)),
+  #{room_id := RoomId} = load(),
+  room:async_exec(RoomId, {room_base, chat, [mod_play:id(), Url, Msg]}),
+  player:rsp(2, 16, #rsp_chat{status = 0}).
+
+player_chat(#{uid := Uid, msg := Msg, url := Url}) ->
+  Self = mod_play:id(),
+  if
+    Self == Uid -> ok;
+    true -> player:rsp(2, 17, #rsp_player_chat{uid = Uid, url = Url, msg = Msg})
+  end.
 
 load() ->
   get(?PDict).
