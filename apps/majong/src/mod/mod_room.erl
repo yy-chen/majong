@@ -123,7 +123,12 @@ room2pb(Room) ->
 
 player2pb(Players) when is_list(Players) ->
   [player2pb(Player) || Player <- Players];
-player2pb(Player) ->
+player2pb(#{uid := Uid} = Player) ->
   lager:info("player : ~p", [Player]),
-  #pb_player{name = <<"123">>, uid = 666666666, logo = undefined, coins = 100}.
+  Name = maps:get(name, Player, undefined),
+  Logo = maps:get(logo, Player, undefined),
+  Coins = maps:get(coins, Player, undefined),
+  Index = maps:get(index, Player, undefined),
+  Owner = maps:get(owner, Player, undefined),
+  #pb_player{name = Name, logo = Logo, coins = Coins, index = Index, owner = Owner, uid = Uid}.
 

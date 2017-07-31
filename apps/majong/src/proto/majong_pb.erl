@@ -43,6 +43,7 @@ encode_msg(Msg, Opts) ->
 	  e_msg_rsp_create_room(Msg, TrUserData);
       #req_ready{} -> e_msg_req_ready(Msg, TrUserData);
       #req_zhuang{} -> e_msg_req_zhuang(Msg, TrUserData);
+      #pb_unit{} -> e_msg_pb_unit(Msg, TrUserData);
       #rsp_game_start{} ->
 	  e_msg_rsp_game_start(Msg, TrUserData);
       #rsp_start{} -> e_msg_rsp_start(Msg, TrUserData);
@@ -158,7 +159,31 @@ e_msg_req_ready(#req_ready{type = F1}, Bin,
       e_type_int32(TrF1, <<Bin/binary, 8>>)
     end.
 
-e_msg_req_zhuang(_Msg, _TrUserData) -> <<>>.
+e_msg_req_zhuang(Msg, TrUserData) ->
+    e_msg_req_zhuang(Msg, <<>>, TrUserData).
+
+
+e_msg_req_zhuang(#req_zhuang{base = F1}, Bin,
+		 TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_sint(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_pb_unit(Msg, TrUserData) ->
+    e_msg_pb_unit(Msg, <<>>, TrUserData).
+
+
+e_msg_pb_unit(#pb_unit{type = F1, num = F2}, Bin,
+	      TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_int32(TrF1, <<Bin/binary, 8>>)
+	 end,
+    begin
+      TrF2 = id(F2, TrUserData),
+      e_type_int32(TrF2, <<B1/binary, 16>>)
+    end.
 
 e_msg_rsp_game_start(Msg, TrUserData) ->
     e_msg_rsp_game_start(Msg, <<>>, TrUserData).
@@ -227,23 +252,33 @@ e_msg_pb_player(Msg, TrUserData) ->
 
 
 e_msg_pb_player(#pb_player{name = F1, uid = F2,
-			   coins = F3, logo = F4, owner = F5, index = F6},
+			   coins = F3, logo = F4, owner = F5, index = F6,
+			   pai = F7},
 		Bin, TrUserData) ->
-    B1 = begin
-	   TrF1 = id(F1, TrUserData),
-	   e_type_string(TrF1, <<Bin/binary, 10>>)
+    B1 = if F1 == undefined -> Bin;
+	    true ->
+		begin
+		  TrF1 = id(F1, TrUserData),
+		  e_type_string(TrF1, <<Bin/binary, 10>>)
+		end
 	 end,
     B2 = begin
 	   TrF2 = id(F2, TrUserData),
 	   e_type_int32(TrF2, <<B1/binary, 16>>)
 	 end,
-    B3 = begin
-	   TrF3 = id(F3, TrUserData),
-	   e_type_int32(TrF3, <<B2/binary, 24>>)
+    B3 = if F3 == undefined -> B2;
+	    true ->
+		begin
+		  TrF3 = id(F3, TrUserData),
+		  e_type_int32(TrF3, <<B2/binary, 24>>)
+		end
 	 end,
-    B4 = begin
-	   TrF4 = id(F4, TrUserData),
-	   e_type_string(TrF4, <<B3/binary, 34>>)
+    B4 = if F4 == undefined -> B3;
+	    true ->
+		begin
+		  TrF4 = id(F4, TrUserData),
+		  e_type_string(TrF4, <<B3/binary, 34>>)
+		end
 	 end,
     B5 = if F5 == undefined -> B4;
 	    true ->
@@ -252,9 +287,15 @@ e_msg_pb_player(#pb_player{name = F1, uid = F2,
 		  e_type_int32(TrF5, <<B4/binary, 40>>)
 		end
 	 end,
+    B6 = begin
+	   TrF6 = id(F6, TrUserData),
+	   e_type_int32(TrF6, <<B5/binary, 48>>)
+	 end,
     begin
-      TrF6 = id(F6, TrUserData),
-      e_type_int32(TrF6, <<B5/binary, 48>>)
+      TrF7 = id(F7, TrUserData),
+      if TrF7 == [] -> B6;
+	 true -> e_field_pb_player_pai(TrF7, B6, TrUserData)
+      end
     end.
 
 e_msg_rsp_join(Msg, TrUserData) ->
@@ -287,11 +328,16 @@ e_msg_rsp_player_zhuang(Msg, TrUserData) ->
     e_msg_rsp_player_zhuang(Msg, <<>>, TrUserData).
 
 
-e_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1},
+e_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1,
+					   base = F2},
 			Bin, TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_int32(TrF1, <<Bin/binary, 8>>)
+	 end,
     begin
-      TrF1 = id(F1, TrUserData),
-      e_type_int32(TrF1, <<Bin/binary, 8>>)
+      TrF2 = id(F2, TrUserData),
+      e_type_sint(TrF2, <<B1/binary, 16>>)
     end.
 
 e_msg_rsp_zhuang(Msg, TrUserData) ->
@@ -358,11 +404,16 @@ e_msg_rsp_zhuang_end(Msg, TrUserData) ->
     e_msg_rsp_zhuang_end(Msg, <<>>, TrUserData).
 
 
-e_msg_rsp_zhuang_end(#rsp_zhuang_end{uid = F1}, Bin,
-		     TrUserData) ->
+e_msg_rsp_zhuang_end(#rsp_zhuang_end{uid = F1,
+				     base = F2},
+		     Bin, TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_int32(TrF1, <<Bin/binary, 8>>)
+	 end,
     begin
-      TrF1 = id(F1, TrUserData),
-      e_type_int32(TrF1, <<Bin/binary, 8>>)
+      TrF2 = id(F2, TrUserData),
+      e_type_sint(TrF2, <<B1/binary, 16>>)
     end.
 
 e_msg_rsp_new_player(Msg, TrUserData) ->
@@ -506,7 +557,19 @@ e_msg_rsp_player_chat(#rsp_player_chat{msg = F1,
       e_type_int32(TrF3, <<B2/binary, 24>>)
     end.
 
-e_msg_rsp_result(_Msg, _TrUserData) -> <<>>.
+e_msg_rsp_result(Msg, TrUserData) ->
+    e_msg_rsp_result(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_result(#rsp_result{players = F1}, Bin,
+		 TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      if TrF1 == [] -> Bin;
+	 true ->
+	     e_field_rsp_result_players(TrF1, Bin, TrUserData)
+      end
+    end.
 
 e_msg_req_start(_Msg, _TrUserData) -> <<>>.
 
@@ -584,6 +647,18 @@ e_msg_rsp_pub(#rsp_pub{status = F1, pub = F2}, Bin,
 
 e_msg_req_pub(_Msg, _TrUserData) -> <<>>.
 
+e_mfield_pb_player_pai(Msg, Bin, TrUserData) ->
+    SubBin = e_msg_pb_unit(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_pb_player_pai([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 58>>,
+    Bin3 = e_mfield_pb_player_pai(id(Elem, TrUserData),
+				  Bin2, TrUserData),
+    e_field_pb_player_pai(Rest, Bin3, TrUserData);
+e_field_pb_player_pai([], Bin, _TrUserData) -> Bin.
+
 e_mfield_rsp_join_players(Msg, Bin, TrUserData) ->
     SubBin = e_msg_pb_player(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -606,6 +681,19 @@ e_mfield_rsp_new_player_player(Msg, Bin, TrUserData) ->
     SubBin = e_msg_pb_player(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_rsp_result_players(Msg, Bin, TrUserData) ->
+    SubBin = e_msg_pb_player(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_rsp_result_players([Elem | Rest], Bin,
+			   TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_rsp_result_players(id(Elem, TrUserData),
+				       Bin2, TrUserData),
+    e_field_rsp_result_players(Rest, Bin3, TrUserData);
+e_field_rsp_result_players([], Bin, _TrUserData) -> Bin.
 
 
 
@@ -645,6 +733,7 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 	  d_msg_rsp_create_room(Bin, TrUserData);
       req_ready -> d_msg_req_ready(Bin, TrUserData);
       req_zhuang -> d_msg_req_zhuang(Bin, TrUserData);
+      pb_unit -> d_msg_pb_unit(Bin, TrUserData);
       rsp_game_start -> d_msg_rsp_game_start(Bin, TrUserData);
       rsp_start -> d_msg_rsp_start(Bin, TrUserData);
       pb_room_info -> d_msg_pb_room_info(Bin, TrUserData);
@@ -1142,63 +1231,197 @@ skip_64_req_ready(<<_:64, Rest/binary>>, Z1, Z2, F1,
 
 
 d_msg_req_zhuang(Bin, TrUserData) ->
-    dfp_read_field_def_req_zhuang(Bin, 0, 0, TrUserData).
+    dfp_read_field_def_req_zhuang(Bin, 0, 0,
+				  id(undefined, TrUserData), TrUserData).
 
-dfp_read_field_def_req_zhuang(<<>>, 0, 0, _) ->
-    #req_zhuang{};
-dfp_read_field_def_req_zhuang(Other, Z1, Z2,
+dfp_read_field_def_req_zhuang(<<8, Rest/binary>>, Z1,
+			      Z2, F1, TrUserData) ->
+    d_field_req_zhuang_base(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_req_zhuang(<<>>, 0, 0, F1, _) ->
+    #req_zhuang{base = F1};
+dfp_read_field_def_req_zhuang(Other, Z1, Z2, F1,
 			      TrUserData) ->
-    dg_read_field_def_req_zhuang(Other, Z1, Z2, TrUserData).
+    dg_read_field_def_req_zhuang(Other, Z1, Z2, F1,
+				 TrUserData).
 
 dg_read_field_def_req_zhuang(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, TrUserData)
+			     N, Acc, F1, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_req_zhuang(Rest, N + 7, X bsl N + Acc,
-				 TrUserData);
+				 F1, TrUserData);
 dg_read_field_def_req_zhuang(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, TrUserData) ->
+			     N, Acc, F1, TrUserData) ->
     Key = X bsl N + Acc,
-    case Key band 7 of
-      0 -> skip_varint_req_zhuang(Rest, 0, 0, TrUserData);
-      1 -> skip_64_req_zhuang(Rest, 0, 0, TrUserData);
-      2 ->
-	  skip_length_delimited_req_zhuang(Rest, 0, 0,
-					   TrUserData);
-      5 -> skip_32_req_zhuang(Rest, 0, 0, TrUserData)
+    case Key of
+      8 ->
+	  d_field_req_zhuang_base(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_req_zhuang(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_req_zhuang(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_req_zhuang(Rest, 0, 0, F1,
+						 TrUserData);
+	    5 -> skip_32_req_zhuang(Rest, 0, 0, F1, TrUserData)
+	  end
     end;
-dg_read_field_def_req_zhuang(<<>>, 0, 0, _) ->
-    #req_zhuang{}.
+dg_read_field_def_req_zhuang(<<>>, 0, 0, F1, _) ->
+    #req_zhuang{base = F1}.
+
+d_field_req_zhuang_base(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_req_zhuang_base(Rest, N + 7, X bsl N + Acc, F1,
+			    TrUserData);
+d_field_req_zhuang_base(<<0:1, X:7, Rest/binary>>, N,
+			Acc, _, TrUserData) ->
+    ZValue = X bsl N + Acc,
+    NewFValue = if ZValue band 1 =:= 0 -> ZValue bsr 1;
+		   true -> -(ZValue + 1 bsr 1)
+		end,
+    dfp_read_field_def_req_zhuang(Rest, 0, 0, NewFValue,
+				  TrUserData).
+
 
 skip_varint_req_zhuang(<<1:1, _:7, Rest/binary>>, Z1,
-		       Z2, TrUserData) ->
-    skip_varint_req_zhuang(Rest, Z1, Z2, TrUserData);
+		       Z2, F1, TrUserData) ->
+    skip_varint_req_zhuang(Rest, Z1, Z2, F1, TrUserData);
 skip_varint_req_zhuang(<<0:1, _:7, Rest/binary>>, Z1,
-		       Z2, TrUserData) ->
-    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, TrUserData).
+		       Z2, F1, TrUserData) ->
+    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, F1,
+				  TrUserData).
 
 
 skip_length_delimited_req_zhuang(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, TrUserData)
+				 N, Acc, F1, TrUserData)
     when N < 57 ->
     skip_length_delimited_req_zhuang(Rest, N + 7,
-				     X bsl N + Acc, TrUserData);
+				     X bsl N + Acc, F1, TrUserData);
 skip_length_delimited_req_zhuang(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, TrUserData) ->
+				 N, Acc, F1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_req_zhuang(Rest2, 0, 0, TrUserData).
+    dfp_read_field_def_req_zhuang(Rest2, 0, 0, F1,
+				  TrUserData).
 
 
-skip_32_req_zhuang(<<_:32, Rest/binary>>, Z1, Z2,
+skip_32_req_zhuang(<<_:32, Rest/binary>>, Z1, Z2, F1,
 		   TrUserData) ->
-    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, TrUserData).
+    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, F1,
+				  TrUserData).
 
 
-skip_64_req_zhuang(<<_:64, Rest/binary>>, Z1, Z2,
+skip_64_req_zhuang(<<_:64, Rest/binary>>, Z1, Z2, F1,
 		   TrUserData) ->
-    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, TrUserData).
+    dfp_read_field_def_req_zhuang(Rest, Z1, Z2, F1,
+				  TrUserData).
+
+
+d_msg_pb_unit(Bin, TrUserData) ->
+    dfp_read_field_def_pb_unit(Bin, 0, 0,
+			       id(undefined, TrUserData),
+			       id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_pb_unit(<<8, Rest/binary>>, Z1, Z2,
+			   F1, F2, TrUserData) ->
+    d_field_pb_unit_type(Rest, Z1, Z2, F1, F2, TrUserData);
+dfp_read_field_def_pb_unit(<<16, Rest/binary>>, Z1, Z2,
+			   F1, F2, TrUserData) ->
+    d_field_pb_unit_num(Rest, Z1, Z2, F1, F2, TrUserData);
+dfp_read_field_def_pb_unit(<<>>, 0, 0, F1, F2, _) ->
+    #pb_unit{type = F1, num = F2};
+dfp_read_field_def_pb_unit(Other, Z1, Z2, F1, F2,
+			   TrUserData) ->
+    dg_read_field_def_pb_unit(Other, Z1, Z2, F1, F2,
+			      TrUserData).
+
+dg_read_field_def_pb_unit(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_pb_unit(Rest, N + 7, X bsl N + Acc,
+			      F1, F2, TrUserData);
+dg_read_field_def_pb_unit(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_pb_unit_type(Rest, 0, 0, F1, F2, TrUserData);
+      16 ->
+	  d_field_pb_unit_num(Rest, 0, 0, F1, F2, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_pb_unit(Rest, 0, 0, F1, F2, TrUserData);
+	    1 -> skip_64_pb_unit(Rest, 0, 0, F1, F2, TrUserData);
+	    2 ->
+		skip_length_delimited_pb_unit(Rest, 0, 0, F1, F2,
+					      TrUserData);
+	    5 -> skip_32_pb_unit(Rest, 0, 0, F1, F2, TrUserData)
+	  end
+    end;
+dg_read_field_def_pb_unit(<<>>, 0, 0, F1, F2, _) ->
+    #pb_unit{type = F1, num = F2}.
+
+d_field_pb_unit_type(<<1:1, X:7, Rest/binary>>, N, Acc,
+		     F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_pb_unit_type(Rest, N + 7, X bsl N + Acc, F1, F2,
+			 TrUserData);
+d_field_pb_unit_type(<<0:1, X:7, Rest/binary>>, N, Acc,
+		     _, F2, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_unit(Rest, 0, 0, NewFValue, F2,
+			       TrUserData).
+
+
+d_field_pb_unit_num(<<1:1, X:7, Rest/binary>>, N, Acc,
+		    F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_pb_unit_num(Rest, N + 7, X bsl N + Acc, F1, F2,
+			TrUserData);
+d_field_pb_unit_num(<<0:1, X:7, Rest/binary>>, N, Acc,
+		    F1, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_unit(Rest, 0, 0, F1, NewFValue,
+			       TrUserData).
+
+
+skip_varint_pb_unit(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, TrUserData) ->
+    skip_varint_pb_unit(Rest, Z1, Z2, F1, F2, TrUserData);
+skip_varint_pb_unit(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, TrUserData) ->
+    dfp_read_field_def_pb_unit(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
+
+
+skip_length_delimited_pb_unit(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_pb_unit(Rest, N + 7,
+				  X bsl N + Acc, F1, F2, TrUserData);
+skip_length_delimited_pb_unit(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_pb_unit(Rest2, 0, 0, F1, F2,
+			       TrUserData).
+
+
+skip_32_pb_unit(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
+		TrUserData) ->
+    dfp_read_field_def_pb_unit(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
+
+
+skip_64_pb_unit(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
+		TrUserData) ->
+    dfp_read_field_def_pb_unit(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
 
 
 d_msg_rsp_game_start(Bin, TrUserData) ->
@@ -1623,205 +1846,232 @@ d_msg_pb_player(Bin, TrUserData) ->
 				 id(undefined, TrUserData),
 				 id(undefined, TrUserData),
 				 id(undefined, TrUserData),
-				 id(undefined, TrUserData), TrUserData).
+				 id(undefined, TrUserData), id([], TrUserData),
+				 TrUserData).
 
 dfp_read_field_def_pb_player(<<10, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_name(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			   F6, TrUserData);
+			   F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<16, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_uid(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			  F6, TrUserData);
+			  F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<24, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_coins(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, TrUserData);
+			    F5, F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<34, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_logo(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			   F6, TrUserData);
+			   F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<40, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_owner(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, TrUserData);
+			    F5, F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<48, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     d_field_pb_player_index(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, TrUserData);
+			    F5, F6, F7, TrUserData);
+dfp_read_field_def_pb_player(<<58, Rest/binary>>, Z1,
+			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+    d_field_pb_player_pai(Rest, Z1, Z2, F1, F2, F3, F4, F5,
+			  F6, F7, TrUserData);
 dfp_read_field_def_pb_player(<<>>, 0, 0, F1, F2, F3, F4,
-			     F5, F6, _) ->
+			     F5, F6, F7, TrUserData) ->
     #pb_player{name = F1, uid = F2, coins = F3, logo = F4,
-	       owner = F5, index = F6};
+	       owner = F5, index = F6,
+	       pai = lists_reverse(F7, TrUserData)};
 dfp_read_field_def_pb_player(Other, Z1, Z2, F1, F2, F3,
-			     F4, F5, F6, TrUserData) ->
+			     F4, F5, F6, F7, TrUserData) ->
     dg_read_field_def_pb_player(Other, Z1, Z2, F1, F2, F3,
-				F4, F5, F6, TrUserData).
+				F4, F5, F6, F7, TrUserData).
 
 dg_read_field_def_pb_player(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+			    N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_pb_player(Rest, N + 7, X bsl N + Acc,
-				F1, F2, F3, F4, F5, F6, TrUserData);
+				F1, F2, F3, F4, F5, F6, F7, TrUserData);
 dg_read_field_def_pb_player(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, F4, F5, F6, TrUserData) ->
+			    N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
 	  d_field_pb_player_name(Rest, 0, 0, F1, F2, F3, F4, F5,
-				 F6, TrUserData);
+				 F6, F7, TrUserData);
       16 ->
 	  d_field_pb_player_uid(Rest, 0, 0, F1, F2, F3, F4, F5,
-				F6, TrUserData);
+				F6, F7, TrUserData);
       24 ->
 	  d_field_pb_player_coins(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, TrUserData);
+				  F6, F7, TrUserData);
       34 ->
 	  d_field_pb_player_logo(Rest, 0, 0, F1, F2, F3, F4, F5,
-				 F6, TrUserData);
+				 F6, F7, TrUserData);
       40 ->
 	  d_field_pb_player_owner(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, TrUserData);
+				  F6, F7, TrUserData);
       48 ->
 	  d_field_pb_player_index(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, TrUserData);
+				  F6, F7, TrUserData);
+      58 ->
+	  d_field_pb_player_pai(Rest, 0, 0, F1, F2, F3, F4, F5,
+				F6, F7, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
 		skip_varint_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5,
-				      F6, TrUserData);
+				      F6, F7, TrUserData);
 	    1 ->
 		skip_64_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
-				  TrUserData);
+				  F7, TrUserData);
 	    2 ->
 		skip_length_delimited_pb_player(Rest, 0, 0, F1, F2, F3,
-						F4, F5, F6, TrUserData);
+						F4, F5, F6, F7, TrUserData);
 	    5 ->
 		skip_32_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
-				  TrUserData)
+				  F7, TrUserData)
 	  end
     end;
 dg_read_field_def_pb_player(<<>>, 0, 0, F1, F2, F3, F4,
-			    F5, F6, _) ->
+			    F5, F6, F7, TrUserData) ->
     #pb_player{name = F1, uid = F2, coins = F3, logo = F4,
-	       owner = F5, index = F6}.
+	       owner = F5, index = F6,
+	       pai = lists_reverse(F7, TrUserData)}.
 
 d_field_pb_player_name(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+		       Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_name(Rest, N + 7, X bsl N + Acc, F1,
-			   F2, F3, F4, F5, F6, TrUserData);
+			   F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_name(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, _, F2, F3, F4, F5, F6, TrUserData) ->
+		       Acc, _, F2, F3, F4, F5, F6, F7, TrUserData) ->
     Len = X bsl N + Acc,
     <<Utf8:Len/binary, Rest2/binary>> = Rest,
     NewFValue = unicode:characters_to_list(Utf8, unicode),
     dfp_read_field_def_pb_player(Rest2, 0, 0, NewFValue, F2,
-				 F3, F4, F5, F6, TrUserData).
+				 F3, F4, F5, F6, F7, TrUserData).
 
 
 d_field_pb_player_uid(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F1, F2, F3, F4, F5, F6, TrUserData)
+		      F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_uid(Rest, N + 7, X bsl N + Acc, F1,
-			  F2, F3, F4, F5, F6, TrUserData);
+			  F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_uid(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F1, _, F3, F4, F5, F6, TrUserData) ->
+		      F1, _, F3, F4, F5, F6, F7, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, NewFValue,
-				 F3, F4, F5, F6, TrUserData).
+				 F3, F4, F5, F6, F7, TrUserData).
 
 
 d_field_pb_player_coins(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_coins(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, TrUserData);
+			    F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_coins(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, _, F4, F5, F6, TrUserData) ->
+			Acc, F1, F2, _, F4, F5, F6, F7, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2,
-				 NewFValue, F4, F5, F6, TrUserData).
+				 NewFValue, F4, F5, F6, F7, TrUserData).
 
 
 d_field_pb_player_logo(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+		       Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_logo(Rest, N + 7, X bsl N + Acc, F1,
-			   F2, F3, F4, F5, F6, TrUserData);
+			   F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_logo(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, _, F5, F6, TrUserData) ->
+		       Acc, F1, F2, F3, _, F5, F6, F7, TrUserData) ->
     Len = X bsl N + Acc,
     <<Utf8:Len/binary, Rest2/binary>> = Rest,
     NewFValue = unicode:characters_to_list(Utf8, unicode),
     dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
-				 NewFValue, F5, F6, TrUserData).
+				 NewFValue, F5, F6, F7, TrUserData).
 
 
 d_field_pb_player_owner(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_owner(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, TrUserData);
+			    F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_owner(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, _, F6, TrUserData) ->
+			Acc, F1, F2, F3, F4, _, F6, F7, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2, F3, F4,
-				 NewFValue, F6, TrUserData).
+				 NewFValue, F6, F7, TrUserData).
 
 
 d_field_pb_player_index(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     d_field_pb_player_index(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, TrUserData);
+			    F2, F3, F4, F5, F6, F7, TrUserData);
 d_field_pb_player_index(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, _, TrUserData) ->
+			Acc, F1, F2, F3, F4, F5, _, F7, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2, F3, F4,
-				 F5, NewFValue, TrUserData).
+				 F5, NewFValue, F7, TrUserData).
+
+
+d_field_pb_player_pai(<<1:1, X:7, Rest/binary>>, N, Acc,
+		      F1, F2, F3, F4, F5, F6, F7, TrUserData)
+    when N < 57 ->
+    d_field_pb_player_pai(Rest, N + 7, X bsl N + Acc, F1,
+			  F2, F3, F4, F5, F6, F7, TrUserData);
+d_field_pb_player_pai(<<0:1, X:7, Rest/binary>>, N, Acc,
+		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Bs:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = id(d_msg_pb_unit(Bs, TrUserData),
+		   TrUserData),
+    dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
+				 F4, F5, F6, cons(NewFValue, F7, TrUserData),
+				 TrUserData).
 
 
 skip_varint_pb_player(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, F4, F5, F6, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     skip_varint_pb_player(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			  F6, TrUserData);
+			  F6, F7, TrUserData);
 skip_varint_pb_player(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, F4, F5, F6, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, TrUserData).
+				 F4, F5, F6, F7, TrUserData).
 
 
 skip_length_delimited_pb_player(<<1:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, F4, F5, F6, TrUserData)
+				N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
     when N < 57 ->
     skip_length_delimited_pb_player(Rest, N + 7,
-				    X bsl N + Acc, F1, F2, F3, F4, F5, F6,
+				    X bsl N + Acc, F1, F2, F3, F4, F5, F6, F7,
 				    TrUserData);
 skip_length_delimited_pb_player(<<0:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, F4, F5, F6, TrUserData) ->
+				N, Acc, F1, F2, F3, F4, F5, F6, F7,
+				TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
-				 F4, F5, F6, TrUserData).
+				 F4, F5, F6, F7, TrUserData).
 
 
 skip_32_pb_player(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, F4, F5, F6, TrUserData) ->
+		  F3, F4, F5, F6, F7, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, TrUserData).
+				 F4, F5, F6, F7, TrUserData).
 
 
 skip_64_pb_player(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, F4, F5, F6, TrUserData) ->
+		  F3, F4, F5, F6, F7, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, TrUserData).
+				 F4, F5, F6, F7, TrUserData).
 
 
 d_msg_rsp_join(Bin, TrUserData) ->
@@ -1979,100 +2229,128 @@ skip_64_rsp_join(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 
 d_msg_rsp_player_zhuang(Bin, TrUserData) ->
     dfp_read_field_def_rsp_player_zhuang(Bin, 0, 0,
+					 id(undefined, TrUserData),
 					 id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_player_zhuang(<<8, Rest/binary>>,
-				     Z1, Z2, F1, TrUserData) ->
-    d_field_rsp_player_zhuang_uid(Rest, Z1, Z2, F1,
+				     Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_player_zhuang_uid(Rest, Z1, Z2, F1, F2,
 				  TrUserData);
-dfp_read_field_def_rsp_player_zhuang(<<>>, 0, 0, F1,
+dfp_read_field_def_rsp_player_zhuang(<<16,
+				       Rest/binary>>,
+				     Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_player_zhuang_base(Rest, Z1, Z2, F1, F2,
+				   TrUserData);
+dfp_read_field_def_rsp_player_zhuang(<<>>, 0, 0, F1, F2,
 				     _) ->
-    #rsp_player_zhuang{uid = F1};
+    #rsp_player_zhuang{uid = F1, base = F2};
 dfp_read_field_def_rsp_player_zhuang(Other, Z1, Z2, F1,
-				     TrUserData) ->
+				     F2, TrUserData) ->
     dg_read_field_def_rsp_player_zhuang(Other, Z1, Z2, F1,
-					TrUserData).
+					F2, TrUserData).
 
 dg_read_field_def_rsp_player_zhuang(<<1:1, X:7,
 				      Rest/binary>>,
-				    N, Acc, F1, TrUserData)
+				    N, Acc, F1, F2, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_player_zhuang(Rest, N + 7,
-					X bsl N + Acc, F1, TrUserData);
+					X bsl N + Acc, F1, F2, TrUserData);
 dg_read_field_def_rsp_player_zhuang(<<0:1, X:7,
 				      Rest/binary>>,
-				    N, Acc, F1, TrUserData) ->
+				    N, Acc, F1, F2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_player_zhuang_uid(Rest, 0, 0, F1,
+	  d_field_rsp_player_zhuang_uid(Rest, 0, 0, F1, F2,
 					TrUserData);
+      16 ->
+	  d_field_rsp_player_zhuang_base(Rest, 0, 0, F1, F2,
+					 TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_player_zhuang(Rest, 0, 0, F1,
+		skip_varint_rsp_player_zhuang(Rest, 0, 0, F1, F2,
 					      TrUserData);
 	    1 ->
-		skip_64_rsp_player_zhuang(Rest, 0, 0, F1, TrUserData);
+		skip_64_rsp_player_zhuang(Rest, 0, 0, F1, F2,
+					  TrUserData);
 	    2 ->
 		skip_length_delimited_rsp_player_zhuang(Rest, 0, 0, F1,
-							TrUserData);
+							F2, TrUserData);
 	    5 ->
-		skip_32_rsp_player_zhuang(Rest, 0, 0, F1, TrUserData)
+		skip_32_rsp_player_zhuang(Rest, 0, 0, F1, F2,
+					  TrUserData)
 	  end
     end;
-dg_read_field_def_rsp_player_zhuang(<<>>, 0, 0, F1,
+dg_read_field_def_rsp_player_zhuang(<<>>, 0, 0, F1, F2,
 				    _) ->
-    #rsp_player_zhuang{uid = F1}.
+    #rsp_player_zhuang{uid = F1, base = F2}.
 
 d_field_rsp_player_zhuang_uid(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F1, TrUserData)
+			      N, Acc, F1, F2, TrUserData)
     when N < 57 ->
     d_field_rsp_player_zhuang_uid(Rest, N + 7,
-				  X bsl N + Acc, F1, TrUserData);
+				  X bsl N + Acc, F1, F2, TrUserData);
 d_field_rsp_player_zhuang_uid(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, _, TrUserData) ->
+			      N, Acc, _, F2, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_player_zhuang(Rest, 0, 0,
+					 NewFValue, F2, TrUserData).
+
+
+d_field_rsp_player_zhuang_base(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_rsp_player_zhuang_base(Rest, N + 7,
+				   X bsl N + Acc, F1, F2, TrUserData);
+d_field_rsp_player_zhuang_base(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, _, TrUserData) ->
+    ZValue = X bsl N + Acc,
+    NewFValue = if ZValue band 1 =:= 0 -> ZValue bsr 1;
+		   true -> -(ZValue + 1 bsr 1)
+		end,
+    dfp_read_field_def_rsp_player_zhuang(Rest, 0, 0, F1,
 					 NewFValue, TrUserData).
 
 
 skip_varint_rsp_player_zhuang(<<1:1, _:7, Rest/binary>>,
-			      Z1, Z2, F1, TrUserData) ->
-    skip_varint_rsp_player_zhuang(Rest, Z1, Z2, F1,
+			      Z1, Z2, F1, F2, TrUserData) ->
+    skip_varint_rsp_player_zhuang(Rest, Z1, Z2, F1, F2,
 				  TrUserData);
 skip_varint_rsp_player_zhuang(<<0:1, _:7, Rest/binary>>,
-			      Z1, Z2, F1, TrUserData) ->
+			      Z1, Z2, F1, F2, TrUserData) ->
     dfp_read_field_def_rsp_player_zhuang(Rest, Z1, Z2, F1,
-					 TrUserData).
+					 F2, TrUserData).
 
 
 skip_length_delimited_rsp_player_zhuang(<<1:1, X:7,
 					  Rest/binary>>,
-					N, Acc, F1, TrUserData)
+					N, Acc, F1, F2, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_player_zhuang(Rest, N + 7,
-					    X bsl N + Acc, F1, TrUserData);
+					    X bsl N + Acc, F1, F2, TrUserData);
 skip_length_delimited_rsp_player_zhuang(<<0:1, X:7,
 					  Rest/binary>>,
-					N, Acc, F1, TrUserData) ->
+					N, Acc, F1, F2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_rsp_player_zhuang(Rest2, 0, 0, F1,
-					 TrUserData).
+					 F2, TrUserData).
 
 
 skip_32_rsp_player_zhuang(<<_:32, Rest/binary>>, Z1, Z2,
-			  F1, TrUserData) ->
+			  F1, F2, TrUserData) ->
     dfp_read_field_def_rsp_player_zhuang(Rest, Z1, Z2, F1,
-					 TrUserData).
+					 F2, TrUserData).
 
 
 skip_64_rsp_player_zhuang(<<_:64, Rest/binary>>, Z1, Z2,
-			  F1, TrUserData) ->
+			  F1, F2, TrUserData) ->
     dfp_read_field_def_rsp_player_zhuang(Rest, Z1, Z2, F1,
-					 TrUserData).
+					 F2, TrUserData).
 
 
 d_msg_rsp_zhuang(Bin, TrUserData) ->
@@ -2561,93 +2839,122 @@ skip_64_rsp_score(<<_:64, Rest/binary>>, Z1, Z2, F1,
 
 d_msg_rsp_zhuang_end(Bin, TrUserData) ->
     dfp_read_field_def_rsp_zhuang_end(Bin, 0, 0,
+				      id(undefined, TrUserData),
 				      id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_zhuang_end(<<8, Rest/binary>>,
-				  Z1, Z2, F1, TrUserData) ->
-    d_field_rsp_zhuang_end_uid(Rest, Z1, Z2, F1,
+				  Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_zhuang_end_uid(Rest, Z1, Z2, F1, F2,
 			       TrUserData);
-dfp_read_field_def_rsp_zhuang_end(<<>>, 0, 0, F1, _) ->
-    #rsp_zhuang_end{uid = F1};
-dfp_read_field_def_rsp_zhuang_end(Other, Z1, Z2, F1,
+dfp_read_field_def_rsp_zhuang_end(<<16, Rest/binary>>,
+				  Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_zhuang_end_base(Rest, Z1, Z2, F1, F2,
+				TrUserData);
+dfp_read_field_def_rsp_zhuang_end(<<>>, 0, 0, F1, F2,
+				  _) ->
+    #rsp_zhuang_end{uid = F1, base = F2};
+dfp_read_field_def_rsp_zhuang_end(Other, Z1, Z2, F1, F2,
 				  TrUserData) ->
-    dg_read_field_def_rsp_zhuang_end(Other, Z1, Z2, F1,
+    dg_read_field_def_rsp_zhuang_end(Other, Z1, Z2, F1, F2,
 				     TrUserData).
 
 dg_read_field_def_rsp_zhuang_end(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, TrUserData)
+				 N, Acc, F1, F2, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_zhuang_end(Rest, N + 7,
-				     X bsl N + Acc, F1, TrUserData);
+				     X bsl N + Acc, F1, F2, TrUserData);
 dg_read_field_def_rsp_zhuang_end(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, TrUserData) ->
+				 N, Acc, F1, F2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_zhuang_end_uid(Rest, 0, 0, F1, TrUserData);
+	  d_field_rsp_zhuang_end_uid(Rest, 0, 0, F1, F2,
+				     TrUserData);
+      16 ->
+	  d_field_rsp_zhuang_end_base(Rest, 0, 0, F1, F2,
+				      TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_zhuang_end(Rest, 0, 0, F1, TrUserData);
-	    1 -> skip_64_rsp_zhuang_end(Rest, 0, 0, F1, TrUserData);
+		skip_varint_rsp_zhuang_end(Rest, 0, 0, F1, F2,
+					   TrUserData);
+	    1 ->
+		skip_64_rsp_zhuang_end(Rest, 0, 0, F1, F2, TrUserData);
 	    2 ->
-		skip_length_delimited_rsp_zhuang_end(Rest, 0, 0, F1,
+		skip_length_delimited_rsp_zhuang_end(Rest, 0, 0, F1, F2,
 						     TrUserData);
-	    5 -> skip_32_rsp_zhuang_end(Rest, 0, 0, F1, TrUserData)
+	    5 ->
+		skip_32_rsp_zhuang_end(Rest, 0, 0, F1, F2, TrUserData)
 	  end
     end;
-dg_read_field_def_rsp_zhuang_end(<<>>, 0, 0, F1, _) ->
-    #rsp_zhuang_end{uid = F1}.
+dg_read_field_def_rsp_zhuang_end(<<>>, 0, 0, F1, F2,
+				 _) ->
+    #rsp_zhuang_end{uid = F1, base = F2}.
 
 d_field_rsp_zhuang_end_uid(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F1, TrUserData)
+			   Acc, F1, F2, TrUserData)
     when N < 57 ->
     d_field_rsp_zhuang_end_uid(Rest, N + 7, X bsl N + Acc,
-			       F1, TrUserData);
+			       F1, F2, TrUserData);
 d_field_rsp_zhuang_end_uid(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, TrUserData) ->
+			   Acc, _, F2, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_zhuang_end(Rest, 0, 0, NewFValue,
-				      TrUserData).
+				      F2, TrUserData).
+
+
+d_field_rsp_zhuang_end_base(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_rsp_zhuang_end_base(Rest, N + 7, X bsl N + Acc,
+				F1, F2, TrUserData);
+d_field_rsp_zhuang_end_base(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F1, _, TrUserData) ->
+    ZValue = X bsl N + Acc,
+    NewFValue = if ZValue band 1 =:= 0 -> ZValue bsr 1;
+		   true -> -(ZValue + 1 bsr 1)
+		end,
+    dfp_read_field_def_rsp_zhuang_end(Rest, 0, 0, F1,
+				      NewFValue, TrUserData).
 
 
 skip_varint_rsp_zhuang_end(<<1:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, TrUserData) ->
-    skip_varint_rsp_zhuang_end(Rest, Z1, Z2, F1,
+			   Z1, Z2, F1, F2, TrUserData) ->
+    skip_varint_rsp_zhuang_end(Rest, Z1, Z2, F1, F2,
 			       TrUserData);
 skip_varint_rsp_zhuang_end(<<0:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, TrUserData) ->
-    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1,
+			   Z1, Z2, F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
 skip_length_delimited_rsp_zhuang_end(<<1:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, TrUserData)
+				     N, Acc, F1, F2, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_zhuang_end(Rest, N + 7,
-					 X bsl N + Acc, F1, TrUserData);
+					 X bsl N + Acc, F1, F2, TrUserData);
 skip_length_delimited_rsp_zhuang_end(<<0:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, TrUserData) ->
+				     N, Acc, F1, F2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_rsp_zhuang_end(Rest2, 0, 0, F1,
+    dfp_read_field_def_rsp_zhuang_end(Rest2, 0, 0, F1, F2,
 				      TrUserData).
 
 
 skip_32_rsp_zhuang_end(<<_:32, Rest/binary>>, Z1, Z2,
-		       F1, TrUserData) ->
-    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1,
+		       F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
 skip_64_rsp_zhuang_end(<<_:64, Rest/binary>>, Z1, Z2,
-		       F1, TrUserData) ->
-    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1,
+		       F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_zhuang_end(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
@@ -3512,63 +3819,95 @@ skip_64_rsp_player_chat(<<_:64, Rest/binary>>, Z1, Z2,
 
 
 d_msg_rsp_result(Bin, TrUserData) ->
-    dfp_read_field_def_rsp_result(Bin, 0, 0, TrUserData).
+    dfp_read_field_def_rsp_result(Bin, 0, 0,
+				  id([], TrUserData), TrUserData).
 
-dfp_read_field_def_rsp_result(<<>>, 0, 0, _) ->
-    #rsp_result{};
-dfp_read_field_def_rsp_result(Other, Z1, Z2,
+dfp_read_field_def_rsp_result(<<10, Rest/binary>>, Z1,
+			      Z2, F1, TrUserData) ->
+    d_field_rsp_result_players(Rest, Z1, Z2, F1,
+			       TrUserData);
+dfp_read_field_def_rsp_result(<<>>, 0, 0, F1,
 			      TrUserData) ->
-    dg_read_field_def_rsp_result(Other, Z1, Z2, TrUserData).
+    #rsp_result{players = lists_reverse(F1, TrUserData)};
+dfp_read_field_def_rsp_result(Other, Z1, Z2, F1,
+			      TrUserData) ->
+    dg_read_field_def_rsp_result(Other, Z1, Z2, F1,
+				 TrUserData).
 
 dg_read_field_def_rsp_result(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, TrUserData)
+			     N, Acc, F1, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_result(Rest, N + 7, X bsl N + Acc,
-				 TrUserData);
+				 F1, TrUserData);
 dg_read_field_def_rsp_result(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, TrUserData) ->
+			     N, Acc, F1, TrUserData) ->
     Key = X bsl N + Acc,
-    case Key band 7 of
-      0 -> skip_varint_rsp_result(Rest, 0, 0, TrUserData);
-      1 -> skip_64_rsp_result(Rest, 0, 0, TrUserData);
-      2 ->
-	  skip_length_delimited_rsp_result(Rest, 0, 0,
-					   TrUserData);
-      5 -> skip_32_rsp_result(Rest, 0, 0, TrUserData)
+    case Key of
+      10 ->
+	  d_field_rsp_result_players(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_rsp_result(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_result(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_result(Rest, 0, 0, F1,
+						 TrUserData);
+	    5 -> skip_32_rsp_result(Rest, 0, 0, F1, TrUserData)
+	  end
     end;
-dg_read_field_def_rsp_result(<<>>, 0, 0, _) ->
-    #rsp_result{}.
+dg_read_field_def_rsp_result(<<>>, 0, 0, F1,
+			     TrUserData) ->
+    #rsp_result{players = lists_reverse(F1, TrUserData)}.
+
+d_field_rsp_result_players(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_result_players(Rest, N + 7, X bsl N + Acc,
+			       F1, TrUserData);
+d_field_rsp_result_players(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Bs:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = id(d_msg_pb_player(Bs, TrUserData),
+		   TrUserData),
+    dfp_read_field_def_rsp_result(Rest2, 0, 0,
+				  cons(NewFValue, F1, TrUserData), TrUserData).
+
 
 skip_varint_rsp_result(<<1:1, _:7, Rest/binary>>, Z1,
-		       Z2, TrUserData) ->
-    skip_varint_rsp_result(Rest, Z1, Z2, TrUserData);
+		       Z2, F1, TrUserData) ->
+    skip_varint_rsp_result(Rest, Z1, Z2, F1, TrUserData);
 skip_varint_rsp_result(<<0:1, _:7, Rest/binary>>, Z1,
-		       Z2, TrUserData) ->
-    dfp_read_field_def_rsp_result(Rest, Z1, Z2, TrUserData).
+		       Z2, F1, TrUserData) ->
+    dfp_read_field_def_rsp_result(Rest, Z1, Z2, F1,
+				  TrUserData).
 
 
 skip_length_delimited_rsp_result(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, TrUserData)
+				 N, Acc, F1, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_result(Rest, N + 7,
-				     X bsl N + Acc, TrUserData);
+				     X bsl N + Acc, F1, TrUserData);
 skip_length_delimited_rsp_result(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, TrUserData) ->
+				 N, Acc, F1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_rsp_result(Rest2, 0, 0, TrUserData).
+    dfp_read_field_def_rsp_result(Rest2, 0, 0, F1,
+				  TrUserData).
 
 
-skip_32_rsp_result(<<_:32, Rest/binary>>, Z1, Z2,
+skip_32_rsp_result(<<_:32, Rest/binary>>, Z1, Z2, F1,
 		   TrUserData) ->
-    dfp_read_field_def_rsp_result(Rest, Z1, Z2, TrUserData).
+    dfp_read_field_def_rsp_result(Rest, Z1, Z2, F1,
+				  TrUserData).
 
 
-skip_64_rsp_result(<<_:64, Rest/binary>>, Z1, Z2,
+skip_64_rsp_result(<<_:64, Rest/binary>>, Z1, Z2, F1,
 		   TrUserData) ->
-    dfp_read_field_def_rsp_result(Rest, Z1, Z2, TrUserData).
+    dfp_read_field_def_rsp_result(Rest, Z1, Z2, F1,
+				  TrUserData).
 
 
 d_msg_req_start(Bin, TrUserData) ->
@@ -4183,6 +4522,7 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_req_ready(Prev, New, TrUserData);
       #req_zhuang{} ->
 	  merge_msg_req_zhuang(Prev, New, TrUserData);
+      #pb_unit{} -> merge_msg_pb_unit(Prev, New, TrUserData);
       #rsp_game_start{} ->
 	  merge_msg_rsp_game_start(Prev, New, TrUserData);
       #rsp_start{} ->
@@ -4278,7 +4618,13 @@ merge_msg_req_ready(#req_ready{},
 		    #req_ready{type = NFtype}, _) ->
     #req_ready{type = NFtype}.
 
-merge_msg_req_zhuang(_Prev, New, _TrUserData) -> New.
+merge_msg_req_zhuang(#req_zhuang{},
+		     #req_zhuang{base = NFbase}, _) ->
+    #req_zhuang{base = NFbase}.
+
+merge_msg_pb_unit(#pb_unit{},
+		  #pb_unit{type = NFtype, num = NFnum}, _) ->
+    #pb_unit{type = NFtype, num = NFnum}.
 
 merge_msg_rsp_game_start(#rsp_game_start{uid = PFuid},
 			 #rsp_game_start{uid = NFuid}, _) ->
@@ -4301,17 +4647,32 @@ merge_msg_pb_room_info(#pb_room_info{},
 		  round = NFround, pay = NFpay, banker = NFbanker,
 		  special = NFspecial, type = NFtype}.
 
-merge_msg_pb_player(#pb_player{owner = PFowner},
+merge_msg_pb_player(#pb_player{name = PFname,
+			       coins = PFcoins, logo = PFlogo, owner = PFowner,
+			       pai = PFpai},
 		    #pb_player{name = NFname, uid = NFuid, coins = NFcoins,
-			       logo = NFlogo, owner = NFowner, index = NFindex},
-		    _) ->
-    #pb_player{name = NFname, uid = NFuid, coins = NFcoins,
-	       logo = NFlogo,
+			       logo = NFlogo, owner = NFowner, index = NFindex,
+			       pai = NFpai},
+		    TrUserData) ->
+    #pb_player{name =
+		   if NFname =:= undefined -> PFname;
+		      true -> NFname
+		   end,
+	       uid = NFuid,
+	       coins =
+		   if NFcoins =:= undefined -> PFcoins;
+		      true -> NFcoins
+		   end,
+	       logo =
+		   if NFlogo =:= undefined -> PFlogo;
+		      true -> NFlogo
+		   end,
 	       owner =
 		   if NFowner =:= undefined -> PFowner;
 		      true -> NFowner
 		   end,
-	       index = NFindex}.
+	       index = NFindex,
+	       pai = 'erlang_++'(PFpai, NFpai, TrUserData)}.
 
 merge_msg_rsp_join(#rsp_join{players = PFplayers,
 			     room_info = PFroom_info},
@@ -4329,8 +4690,9 @@ merge_msg_rsp_join(#rsp_join{players = PFplayers,
 		  end}.
 
 merge_msg_rsp_player_zhuang(#rsp_player_zhuang{},
-			    #rsp_player_zhuang{uid = NFuid}, _) ->
-    #rsp_player_zhuang{uid = NFuid}.
+			    #rsp_player_zhuang{uid = NFuid, base = NFbase},
+			    _) ->
+    #rsp_player_zhuang{uid = NFuid, base = NFbase}.
 
 merge_msg_rsp_zhuang(#rsp_zhuang{},
 		     #rsp_zhuang{status = NFstatus}, _) ->
@@ -4354,8 +4716,8 @@ merge_msg_rsp_score(#rsp_score{},
     #rsp_score{status = NFstatus}.
 
 merge_msg_rsp_zhuang_end(#rsp_zhuang_end{},
-			 #rsp_zhuang_end{uid = NFuid}, _) ->
-    #rsp_zhuang_end{uid = NFuid}.
+			 #rsp_zhuang_end{uid = NFuid, base = NFbase}, _) ->
+    #rsp_zhuang_end{uid = NFuid, base = NFbase}.
 
 merge_msg_rsp_new_player(#rsp_new_player{player =
 					     PFplayer},
@@ -4428,7 +4790,10 @@ merge_msg_rsp_player_chat(#rsp_player_chat{msg = PFmsg,
 			 end,
 		     uid = NFuid}.
 
-merge_msg_rsp_result(_Prev, New, _TrUserData) -> New.
+merge_msg_rsp_result(#rsp_result{players = PFplayers},
+		     #rsp_result{players = NFplayers}, TrUserData) ->
+    #rsp_result{players =
+		    'erlang_++'(PFplayers, NFplayers, TrUserData)}.
 
 merge_msg_req_start(_Prev, New, _TrUserData) -> New.
 
@@ -4484,6 +4849,7 @@ verify_msg(Msg, Opts) ->
 	  v_msg_req_ready(Msg, [req_ready], TrUserData);
       #req_zhuang{} ->
 	  v_msg_req_zhuang(Msg, [req_zhuang], TrUserData);
+      #pb_unit{} -> v_msg_pb_unit(Msg, [pb_unit], TrUserData);
       #rsp_game_start{} ->
 	  v_msg_rsp_game_start(Msg, [rsp_game_start], TrUserData);
       #rsp_start{} ->
@@ -4581,7 +4947,16 @@ v_msg_req_ready(#req_ready{type = F1}, Path, _) ->
     v_type_int32(F1, [type | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_req_zhuang/3}).
-v_msg_req_zhuang(#req_zhuang{}, _Path, _) -> ok.
+v_msg_req_zhuang(#req_zhuang{base = F1}, Path, _) ->
+    v_type_sint32(F1, [base | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_pb_unit/3}).
+v_msg_pb_unit(#pb_unit{type = F1, num = F2}, Path, _) ->
+    v_type_int32(F1, [type | Path]),
+    v_type_int32(F2, [num | Path]),
+    ok;
+v_msg_pb_unit(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, pb_unit}, X, Path).
 
 -dialyzer({nowarn_function,v_msg_rsp_game_start/3}).
 v_msg_rsp_game_start(#rsp_game_start{uid = F1}, Path,
@@ -4613,16 +4988,31 @@ v_msg_pb_room_info(X, Path, _TrUserData) ->
 
 -dialyzer({nowarn_function,v_msg_pb_player/3}).
 v_msg_pb_player(#pb_player{name = F1, uid = F2,
-			   coins = F3, logo = F4, owner = F5, index = F6},
-		Path, _) ->
-    v_type_string(F1, [name | Path]),
+			   coins = F3, logo = F4, owner = F5, index = F6,
+			   pai = F7},
+		Path, TrUserData) ->
+    if F1 == undefined -> ok;
+       true -> v_type_string(F1, [name | Path])
+    end,
     v_type_int32(F2, [uid | Path]),
-    v_type_int32(F3, [coins | Path]),
-    v_type_string(F4, [logo | Path]),
+    if F3 == undefined -> ok;
+       true -> v_type_int32(F3, [coins | Path])
+    end,
+    if F4 == undefined -> ok;
+       true -> v_type_string(F4, [logo | Path])
+    end,
     if F5 == undefined -> ok;
        true -> v_type_int32(F5, [owner | Path])
     end,
     v_type_int32(F6, [index | Path]),
+    if is_list(F7) ->
+	   _ = [v_msg_pb_unit(Elem, [pai | Path], TrUserData)
+		|| Elem <- F7],
+	   ok;
+       true ->
+	   mk_type_error({invalid_list_of, {msg, pb_unit}}, F7,
+			 Path)
+    end,
     ok;
 v_msg_pb_player(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, pb_player}, X, Path).
@@ -4647,9 +5037,12 @@ v_msg_rsp_join(#rsp_join{status = F1, players = F2,
     ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_player_zhuang/3}).
-v_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1},
+v_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1,
+					   base = F2},
 			Path, _) ->
-    v_type_int32(F1, [uid | Path]), ok.
+    v_type_int32(F1, [uid | Path]),
+    v_type_sint32(F2, [base | Path]),
+    ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_zhuang/3}).
 v_msg_rsp_zhuang(#rsp_zhuang{status = F1}, Path, _) ->
@@ -4677,9 +5070,12 @@ v_msg_rsp_score(#rsp_score{status = F1}, Path, _) ->
     v_type_int32(F1, [status | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_zhuang_end/3}).
-v_msg_rsp_zhuang_end(#rsp_zhuang_end{uid = F1}, Path,
-		     _) ->
-    v_type_int32(F1, [uid | Path]), ok.
+v_msg_rsp_zhuang_end(#rsp_zhuang_end{uid = F1,
+				     base = F2},
+		     Path, _) ->
+    v_type_int32(F1, [uid | Path]),
+    v_type_sint32(F2, [base | Path]),
+    ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_new_player/3}).
 v_msg_rsp_new_player(#rsp_new_player{player = F1}, Path,
@@ -4746,7 +5142,17 @@ v_msg_rsp_player_chat(#rsp_player_chat{msg = F1,
     ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_result/3}).
-v_msg_rsp_result(#rsp_result{}, _Path, _) -> ok.
+v_msg_rsp_result(#rsp_result{players = F1}, Path,
+		 TrUserData) ->
+    if is_list(F1) ->
+	   _ = [v_msg_pb_player(Elem, [players | Path], TrUserData)
+		|| Elem <- F1],
+	   ok;
+       true ->
+	   mk_type_error({invalid_list_of, {msg, pb_player}}, F1,
+			 Path)
+    end,
+    ok.
 
 -dialyzer({nowarn_function,v_msg_req_start/3}).
 v_msg_req_start(#req_start{}, _Path, _) -> ok.
@@ -4870,7 +5276,14 @@ get_msg_defs() ->
      {{msg, req_ready},
       [#field{name = type, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
-     {{msg, req_zhuang}, []},
+     {{msg, req_zhuang},
+      [#field{name = base, fnum = 1, rnum = 2, type = sint32,
+	      occurrence = required, opts = []}]},
+     {{msg, pb_unit},
+      [#field{name = type, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = num, fnum = 2, rnum = 3, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, rsp_game_start},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = optional, opts = []}]},
@@ -4894,17 +5307,20 @@ get_msg_defs() ->
 	      occurrence = required, opts = []}]},
      {{msg, pb_player},
       [#field{name = name, fnum = 1, rnum = 2, type = string,
-	      occurrence = required, opts = []},
+	      occurrence = optional, opts = []},
        #field{name = uid, fnum = 2, rnum = 3, type = int32,
 	      occurrence = required, opts = []},
        #field{name = coins, fnum = 3, rnum = 4, type = int32,
-	      occurrence = required, opts = []},
+	      occurrence = optional, opts = []},
        #field{name = logo, fnum = 4, rnum = 5, type = string,
-	      occurrence = required, opts = []},
+	      occurrence = optional, opts = []},
        #field{name = owner, fnum = 5, rnum = 6, type = int32,
 	      occurrence = optional, opts = []},
        #field{name = index, fnum = 6, rnum = 7, type = int32,
-	      occurrence = required, opts = []}]},
+	      occurrence = required, opts = []},
+       #field{name = pai, fnum = 7, rnum = 8,
+	      type = {msg, pb_unit}, occurrence = repeated,
+	      opts = []}]},
      {{msg, rsp_join},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []},
@@ -4916,6 +5332,8 @@ get_msg_defs() ->
 	      opts = []}]},
      {{msg, rsp_player_zhuang},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = base, fnum = 2, rnum = 3, type = sint32,
 	      occurrence = required, opts = []}]},
      {{msg, rsp_zhuang},
       [#field{name = status, fnum = 1, rnum = 2,
@@ -4936,6 +5354,8 @@ get_msg_defs() ->
 	      occurrence = required, opts = []}]},
      {{msg, rsp_zhuang_end},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = base, fnum = 2, rnum = 3, type = sint32,
 	      occurrence = required, opts = []}]},
      {{msg, rsp_new_player},
       [#field{name = player, fnum = 1, rnum = 2,
@@ -4980,7 +5400,11 @@ get_msg_defs() ->
 	      occurrence = optional, opts = []},
        #field{name = uid, fnum = 3, rnum = 4, type = int32,
 	      occurrence = required, opts = []}]},
-     {{msg, rsp_result}, []}, {{msg, req_start}, []},
+     {{msg, rsp_result},
+      [#field{name = players, fnum = 1, rnum = 2,
+	      type = {msg, pb_player}, occurrence = repeated,
+	      opts = []}]},
+     {{msg, req_start}, []},
      {{msg, rsp_chat},
       [#field{name = status, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
@@ -5005,13 +5429,14 @@ get_msg_defs() ->
 
 get_msg_names() ->
     [req_join, req_login, rsp_create_room, req_ready,
-     req_zhuang, rsp_game_start, rsp_start, pb_room_info,
-     pb_player, rsp_join, rsp_player_zhuang, rsp_zhuang,
-     rsp_player_leave, rsp_leave, rsp_player_score,
-     rsp_score, rsp_zhuang_end, rsp_new_player, rsp_login,
-     req_create_room, rsp_player_ready, rsp_ready,
-     rsp_player_chat, rsp_result, req_start, rsp_chat,
-     req_score, req_leave, req_chat, rsp_pub, req_pub].
+     req_zhuang, pb_unit, rsp_game_start, rsp_start,
+     pb_room_info, pb_player, rsp_join, rsp_player_zhuang,
+     rsp_zhuang, rsp_player_leave, rsp_leave,
+     rsp_player_score, rsp_score, rsp_zhuang_end,
+     rsp_new_player, rsp_login, req_create_room,
+     rsp_player_ready, rsp_ready, rsp_player_chat,
+     rsp_result, req_start, rsp_chat, req_score, req_leave,
+     req_chat, rsp_pub, req_pub].
 
 
 get_enum_names() -> [].
@@ -5049,7 +5474,14 @@ find_msg_def(rsp_create_room) ->
 find_msg_def(req_ready) ->
     [#field{name = type, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
-find_msg_def(req_zhuang) -> [];
+find_msg_def(req_zhuang) ->
+    [#field{name = base, fnum = 1, rnum = 2, type = sint32,
+	    occurrence = required, opts = []}];
+find_msg_def(pb_unit) ->
+    [#field{name = type, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = num, fnum = 2, rnum = 3, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(rsp_game_start) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = optional, opts = []}];
@@ -5073,17 +5505,20 @@ find_msg_def(pb_room_info) ->
 	    occurrence = required, opts = []}];
 find_msg_def(pb_player) ->
     [#field{name = name, fnum = 1, rnum = 2, type = string,
-	    occurrence = required, opts = []},
+	    occurrence = optional, opts = []},
      #field{name = uid, fnum = 2, rnum = 3, type = int32,
 	    occurrence = required, opts = []},
      #field{name = coins, fnum = 3, rnum = 4, type = int32,
-	    occurrence = required, opts = []},
+	    occurrence = optional, opts = []},
      #field{name = logo, fnum = 4, rnum = 5, type = string,
-	    occurrence = required, opts = []},
+	    occurrence = optional, opts = []},
      #field{name = owner, fnum = 5, rnum = 6, type = int32,
 	    occurrence = optional, opts = []},
      #field{name = index, fnum = 6, rnum = 7, type = int32,
-	    occurrence = required, opts = []}];
+	    occurrence = required, opts = []},
+     #field{name = pai, fnum = 7, rnum = 8,
+	    type = {msg, pb_unit}, occurrence = repeated,
+	    opts = []}];
 find_msg_def(rsp_join) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []},
@@ -5095,6 +5530,8 @@ find_msg_def(rsp_join) ->
 	    opts = []}];
 find_msg_def(rsp_player_zhuang) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = base, fnum = 2, rnum = 3, type = sint32,
 	    occurrence = required, opts = []}];
 find_msg_def(rsp_zhuang) ->
     [#field{name = status, fnum = 1, rnum = 2,
@@ -5115,6 +5552,8 @@ find_msg_def(rsp_score) ->
 	    occurrence = required, opts = []}];
 find_msg_def(rsp_zhuang_end) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = base, fnum = 2, rnum = 3, type = sint32,
 	    occurrence = required, opts = []}];
 find_msg_def(rsp_new_player) ->
     [#field{name = player, fnum = 1, rnum = 2,
@@ -5159,7 +5598,10 @@ find_msg_def(rsp_player_chat) ->
 	    occurrence = optional, opts = []},
      #field{name = uid, fnum = 3, rnum = 4, type = int32,
 	    occurrence = required, opts = []}];
-find_msg_def(rsp_result) -> [];
+find_msg_def(rsp_result) ->
+    [#field{name = players, fnum = 1, rnum = 2,
+	    type = {msg, pb_player}, occurrence = repeated,
+	    opts = []}];
 find_msg_def(req_start) -> [];
 find_msg_def(rsp_chat) ->
     [#field{name = status, fnum = 1, rnum = 2, type = int32,

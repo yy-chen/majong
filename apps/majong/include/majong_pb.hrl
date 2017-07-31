@@ -42,7 +42,15 @@
 -ifndef('REQ_ZHUANG_PB_H').
 -define('REQ_ZHUANG_PB_H', true).
 -record(req_zhuang,
-        {
+        {base                           % = 1, sint32
+        }).
+-endif.
+
+-ifndef('PB_UNIT_PB_H').
+-define('PB_UNIT_PB_H', true).
+-record(pb_unit,
+        {type,                          % = 1, int32
+         num                            % = 2, int32
         }).
 -endif.
 
@@ -76,12 +84,13 @@
 -ifndef('PB_PLAYER_PB_H').
 -define('PB_PLAYER_PB_H', true).
 -record(pb_player,
-        {name,                          % = 1, string
+        {name,                          % = 1, string (optional)
          uid,                           % = 2, int32
-         coins,                         % = 3, int32
-         logo,                          % = 4, string
+         coins,                         % = 3, int32 (optional)
+         logo,                          % = 4, string (optional)
          owner,                         % = 5, int32 (optional)
-         index                          % = 6, int32
+         index,                         % = 6, int32
+         pai = []                       % = 7, [{msg,pb_unit}]
         }).
 -endif.
 
@@ -97,7 +106,8 @@
 -ifndef('RSP_PLAYER_ZHUANG_PB_H').
 -define('RSP_PLAYER_ZHUANG_PB_H', true).
 -record(rsp_player_zhuang,
-        {uid                            % = 1, int32
+        {uid,                           % = 1, int32
+         base                           % = 2, sint32
         }).
 -endif.
 
@@ -140,7 +150,8 @@
 -ifndef('RSP_ZHUANG_END_PB_H').
 -define('RSP_ZHUANG_END_PB_H', true).
 -record(rsp_zhuang_end,
-        {uid                            % = 1, int32
+        {uid,                           % = 1, int32
+         base                           % = 2, sint32
         }).
 -endif.
 
@@ -201,7 +212,7 @@
 -ifndef('RSP_RESULT_PB_H').
 -define('RSP_RESULT_PB_H', true).
 -record(rsp_result,
-        {
+        {players = []                   % = 1, [{msg,pb_player}]
         }).
 -endif.
 
