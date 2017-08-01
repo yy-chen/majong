@@ -66,6 +66,7 @@ join(Bin) ->
   end.
 
 new_player(Player) ->
+  lager:info("new player : ~p", [Player]),
   player:rsp(2, 3, #rsp_new_player{player = player2pb(Player)}).
 
 leave() ->
