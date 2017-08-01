@@ -17,7 +17,7 @@
 
 load(undefined) ->  %%新建
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => allocate_uid:allocate()};
-load(Uid) when is_integer(Uid)->
+load(Uid) when is_integer(Uid) ->
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => allocate_uid:allocate()};
 load(OpenId) ->
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => allocate_uid:allocate()}.

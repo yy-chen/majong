@@ -58,6 +58,8 @@ join(Bin) ->
     {error, _} -> player:rsp(2, 2, #rsp_join{status = -1});
     #{room_info := RoomInfo, players := Players} ->
       PbRoom = room2pb(RoomInfo),
+      lager:info("rsp join room info : ~p", [RoomInfo]),
+      lager:info("rsp join players : ~p", [Players]),
       PbPlayers = player2pb(Players),
       down(#{room_id => RoomId}),
       player:rsp(2, 2, #rsp_join{status = 0, players = PbPlayers, room_info = PbRoom})
