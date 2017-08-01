@@ -57,7 +57,7 @@ ready(Uid, Type) ->
     Type == 1 -> down(Room#{ready => lists:usort([Uid | Ready])});
     true -> down(Room#{ready => lists:delete(Uid, Ready)})
   end,
-  multi_cast(Players, {mod_room, player_ready, [Uid]}).
+  multi_cast(Players, {mod_room, player_ready, [Uid, Type]}).
 
 start(Uid) ->
   #{owner := Owner, ready := Ready, players := Players, room_info := RoomInfo, state := State} = Room = load(),
