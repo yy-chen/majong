@@ -45,25 +45,14 @@ init([]) ->
   {ok, #state{net = undefined}}.
 
 handle_call({exec, M, F, A}, _, State) ->
-  Ans = try
-          erlang:apply(M, F, A)
-        catch
-          T: R ->
-            lager:info("exec error type : ~p excetion : ~p mod : ~p f : ~P a : ~p ", [T, R, M, F, A]),
-            {error, exception}
-        end,
+  Ans = erlang:apply(M, F, A),
   {reply, Ans, State};
 
 handle_call(_, _, State) ->
   {reply, ok, State}.
 
 handle_cast({exec, M, F, A}, State) ->
-  try
-    erlang:apply(M, F, A)
-  catch
-    T: E ->
-      lager:info("aexec type : ~p excetion : ~p m : ~p f : ~p a : ~p", [T, E, M, F, A])
-  end,
+  erlang:apply(M, F, A),
   {noreply, State};
 
 handle_cast(_Request, State) ->
