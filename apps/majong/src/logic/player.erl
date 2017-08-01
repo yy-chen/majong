@@ -81,6 +81,7 @@ handle_info(_Info, State) ->
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 terminate(_Reason, _State) ->
+  gproc:goodbye(),
   ok.
 
 dispatch(<<G:32, C:32, Bin/binary>>) ->
