@@ -33,7 +33,8 @@
 
 allocate() ->
   Index = rand:uniform(90) + 9,
-  gen_server:call(list_to_atom("allocate_uid" ++ integer_to_list(Index)), get).
+  {ok, Uid} = gen_server:call(list_to_atom("allocate_uid" ++ integer_to_list(Index)), get),
+  Uid.
 
 start_pool() ->
   Restart = permanent,
