@@ -26,12 +26,14 @@ pid(Pid) when is_pid(Pid) -> Pid;
 pid(Uid) -> gproc:whereis_name({n, l, {uid, Uid}}).
 
 sync_exec(Info, {M, F, A}) ->
+  lager:info("sync : ~p", [pid(Info)]),
   case pid(Info) of
     undefined -> {error, no_player};
     Pid -> gen_server:call(Pid, {exec, M, F, A})
   end.
 
 async_exec(Info, {M, F, A}) ->
+  lager:info("async : ~p", [pid(Info)]),
   case pid(Info) of
     undefined -> {error, no_player};
     Pid -> gen_server:cast(Pid, {exec, M, F, A})

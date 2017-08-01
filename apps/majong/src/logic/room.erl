@@ -34,7 +34,7 @@ lanuch(RoomId) ->
 
 create(PlayerInfo, RoomInfo) ->
   RoomId = mod_svr:room_id(),
-  ChildSpec = {RoomId, {?MODULE, start_link, [#{player => PlayerInfo#{<<"pid">> => self()}, room_id => RoomId, room_info => RoomInfo}]}, transient, 5000, worker, [room]},
+  ChildSpec = {RoomId, {?MODULE, start_link, [#{player => PlayerInfo#{pid => self()}, room_id => RoomId, room_info => RoomInfo}]}, transient, 5000, worker, [room]},
   case supervisor:start_child(room_sup, ChildSpec) of
     {ok, _} -> {ok, RoomId};
     {error, Error} ->
