@@ -131,7 +131,7 @@ player2pb(#{uid := Uid} = Player) ->
   Name = maps:get(name, Player, undefined),
   Logo = maps:get(logo, Player, undefined),
   Coins = maps:get(coins, Player, undefined),
-  Index = maps:get(index, Player, undefined),
+  Index = maps:get(index, Player, 0),
   Owner = maps:get(owner, Player, undefined),
   #pb_player{name = Name, logo = Logo, coins = Coins, index = Index, owner = Owner, uid = Uid}.
 
