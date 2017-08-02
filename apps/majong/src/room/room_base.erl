@@ -36,7 +36,7 @@ join(Player) ->
     Num == 5 -> {error, full};     %%满人
     true ->
       down(Room#{players => Players ++ [Player], num => Num + 1}),
-      multi_cast(Players, {mod_room, new_player, Player}),
+      multi_cast(Players, {mod_room, new_player, [Player]}),
       Room
   end.
 
