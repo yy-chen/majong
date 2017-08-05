@@ -19,7 +19,11 @@
   player_ready/2,
   game_start/0,
   game_start/1,
-  player_chat/1
+  player_chat/1,
+  notify_zhuang/2,
+  notify_zhuang_end/2,
+  notify_res/1,
+  notify_score/2
 ]).
 
 %%#{room_id => int()}
@@ -31,6 +35,8 @@ dispatch(C, Bin) ->
     4 -> leave();
     6 -> ready(Bin);
     8 -> start();
+    10 -> zhuang(Bin);
+    13 -> score(Bin);
     16 -> chat(Bin)
   end.
 
@@ -98,6 +104,34 @@ start() ->
 
 game_start() -> player:rsp(2, 9, #rsp_game_start{}).     %%抢庄模式 没庄家
 game_start(Uid) -> player:rsp(2, 9, #rsp_game_start{uid = Uid}).
+
+zhuang(Bin) ->
+  #req_zhuang{base = Base} = majong_pb:decode_msg(Bin, req_zhuang),
+  #{room_id := RoomId} = load(),
+  case room:sync_exec(RoomId, {room_war, zhuang, [mod_play:id(), Base]}) of
+    {error, _} -> player:rsp(2, 10, #rsp_zhuang{status = -1});
+    _ -> player:rsp(2, 10, #rsp_zhuang{status = 0})
+  end.
+
+notify_zhuang(Uid, Base) ->
+  player:rsp(2, 11, #rsp_player_zhuang{uid = Uid, base = Base}).
+
+notify_zhuang_end(Uid, Base) ->
+  player:rsp(2, 12, #rsp_zhuang_end{uid = Uid, base = Base}).
+
+score(Bin) ->
+  #req_score{score = Score} = majong_pb:decode_msg(Bin, req_score),
+  #{room_id := RoomId} = load(),
+  case room:sync_exec(RoomId, {room_war, score, [mod_play:id(), Score]}) of
+    {error, _} -> player:rsp(2, 13, #rsp_score{status = -1});
+    _ -> player:rsp(2, 13, #rsp_score{status = 0})
+  end.
+
+notify_score(Uid, Score) ->
+  player:rsp(2, 14, #rsp_player_score{score = Score, uid = Uid}).
+
+notify_res(Players) ->
+  player:rsp(2, 15, #rsp_result{players = player2pb(Players)}).
 
 chat(Bin) ->
   #req_chat{msg = Msg, voice = Voice} = majong_pb:decode_msg(Bin, req_chat),
