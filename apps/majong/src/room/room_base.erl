@@ -64,6 +64,7 @@ start(Uid) ->
   if
     Owner =/= Uid -> {error, no_owner};
     length(Ready) =/= length(Players) - 1 -> {error, no_ready};  %%房主不用准备
+    length(Ready) == 0 -> {error, no_play};
     State =/= ?Ready -> {error, no_ready};
     true ->
       #{banker := BankerType} = RoomInfo,
