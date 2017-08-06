@@ -9,17 +9,20 @@
 -module(room_war).
 -author("cyy").
 -define(PDict, room_war).
+-include("majong_pb.hrl").
 %% API
 -export([
   choose_banker/2,
-  zhuang/2
+  zhuang/2,
+  score/2
 ]).
 
 choose_banker(Players, BankerType) ->
   Uids = [Uid || #{uid := Uid} <- Players],
-  Info = load(),
+  Info = init(),
   Cards = get_cards(Uids),
   down(Info#{players => Uids, cards => Cards}),
+  notify_cards(Cards),
   case BankerType of   %% 2: 轮庄 3: 随机庄  4: 固定庄
     1 -> undefined;
     2 ->
@@ -49,6 +52,11 @@ choose_banker(Players, BankerType) ->
       down(Info1#{zhuang => {Zhuang, 1}}),
       Zhuang
   end.
+
+notify_cards(Cards) ->
+  {Pbs, Uids} = maps:fold(fun(K, V, {In, T}) ->
+    {In ++ [#{uid => K, pai => V}], T ++ [K]} end, {[], []}, Cards),
+  multi_cast(Uids, {mod_room, notify_cards, Pbs}).
 
 get_cards(Uids) ->
   L = dhlist:shuffle(lists:seq(0, 51)),
@@ -87,6 +95,20 @@ zhuang(Uid, Base) ->
       down(Room1)
   end.
 
+score(Uid, Score) ->
+  Info = load(),
+  #{zhuang := {Zhuang, Base}, cards := C, total := Total, players := Uids} = Info,
+  Cards1 = maps:get(Uid, C),
+  Cards2 = maps:get(Zhuang, C),
+  Add = case pokers_type:cmp(Cards1, Cards2) of
+          1 -> pokers_type:get_score(Cards1) * Score * Base;
+          0 -> pokers_type:get_score(Cards1) * Score * Base * -1
+        end,
+  ZhuangScore = maps:get(Zhuang, Total, 0),
+  UidScore = maps:get(Uid, Total, 0),
+  down(Info#{total => #{Uid => UidScore + Add, Zhuang => ZhuangScore - Add}}),
+  multi_cast(Uids, {mod_room, notify_score, [Uid, Score, Add]}).
+
 trans(Num) ->
   Type = trunc(Num / 13) + 1,
   N = Num rem 13 + 1,
@@ -95,10 +117,14 @@ trans(Num) ->
 down(Info) ->
   put(?PDict, Info).
 
+init() ->
+  Info = load(),
+  Info#{c_zhuang => #{1 => [], 2 => [], 3 => []}, cards => #{}, score => #{}, players => []}.
+
 load() ->
   case get(?PDict) of
     undefined ->
-      #{l_zhuang => [], zhuang => {0, 1}, c_zhuang => #{1 => [], 2 => [], 3 => []}, cards => #{}, score => #{}, players => []};
+      #{l_zhuang => [], zhuang => {0, 1}, c_zhuang => #{1 => [], 2 => [], 3 => []}, cards => #{}, score => #{}, players => [], total => #{}};
     Info -> Info
   end.
 

@@ -90,7 +90,8 @@
          logo,                          % = 4, string (optional)
          owner,                         % = 5, int32 (optional)
          index,                         % = 6, int32
-         pai = []                       % = 7, [{msg,pb_unit}]
+         pai = [],                      % = 7, [{msg,pb_unit}]
+         delta                          % = 8, int32 (optional)
         }).
 -endif.
 
@@ -136,7 +137,8 @@
 -define('RSP_PLAYER_SCORE_PB_H', true).
 -record(rsp_player_score,
         {uid,                           % = 1, int32
-         score                          % = 2, int32
+         score,                         % = 2, int32
+         delta                          % = 3, int32
         }).
 -endif.
 

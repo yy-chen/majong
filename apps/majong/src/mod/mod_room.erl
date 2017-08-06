@@ -22,8 +22,8 @@
   player_chat/1,
   notify_zhuang/2,
   notify_zhuang_end/2,
-  notify_res/1,
-  notify_score/2
+  notify_cards/1,
+  notify_score/3
 ]).
 
 %%#{room_id => int()}
@@ -127,10 +127,10 @@ score(Bin) ->
     _ -> player:rsp(2, 13, #rsp_score{status = 0})
   end.
 
-notify_score(Uid, Score) ->
-  player:rsp(2, 14, #rsp_player_score{score = Score, uid = Uid}).
+notify_score(Uid, Score, Delta) ->
+  player:rsp(2, 14, #rsp_player_score{score = Score, uid = Uid, delta = Delta}).
 
-notify_res(Players) ->
+notify_cards(Players) ->
   player:rsp(2, 15, #rsp_result{players = player2pb(Players)}).
 
 chat(Bin) ->
@@ -167,5 +167,11 @@ player2pb(#{uid := Uid} = Player) ->
   Coins = maps:get(coins, Player, undefined),
   Index = maps:get(index, Player, 0),
   Owner = maps:get(owner, Player, undefined),
-  #pb_player{name = Name, logo = Logo, coins = Coins, index = Index, owner = Owner, uid = Uid}.
+  Pai = unit2pb(maps:get(pai, Player, [])),
+  Delta = maps:get(delta, Player, undefined),
+  #pb_player{name = Name, logo = Logo, coins = Coins, index = Index, owner = Owner, uid = Uid, pai = Pai, delta = Delta}.
 
+unit2pb(L) when is_list(L) ->
+  [unit2pb(P) || P <- L];
+unit2pb(#{id := Id, type := Type}) ->
+  #pb_unit{num = Id, type = Type}.

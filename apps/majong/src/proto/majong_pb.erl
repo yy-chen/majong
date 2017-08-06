@@ -253,7 +253,7 @@ e_msg_pb_player(Msg, TrUserData) ->
 
 e_msg_pb_player(#pb_player{name = F1, uid = F2,
 			   coins = F3, logo = F4, owner = F5, index = F6,
-			   pai = F7},
+			   pai = F7, delta = F8},
 		Bin, TrUserData) ->
     B1 = if F1 == undefined -> Bin;
 	    true ->
@@ -291,11 +291,18 @@ e_msg_pb_player(#pb_player{name = F1, uid = F2,
 	   TrF6 = id(F6, TrUserData),
 	   e_type_int32(TrF6, <<B5/binary, 48>>)
 	 end,
-    begin
-      TrF7 = id(F7, TrUserData),
-      if TrF7 == [] -> B6;
-	 true -> e_field_pb_player_pai(TrF7, B6, TrUserData)
-      end
+    B7 = begin
+	   TrF7 = id(F7, TrUserData),
+	   if TrF7 == [] -> B6;
+	      true -> e_field_pb_player_pai(TrF7, B6, TrUserData)
+	   end
+	 end,
+    if F8 == undefined -> B7;
+       true ->
+	   begin
+	     TrF8 = id(F8, TrUserData),
+	     e_type_int32(TrF8, <<B7/binary, 64>>)
+	   end
     end.
 
 e_msg_rsp_join(Msg, TrUserData) ->
@@ -378,15 +385,19 @@ e_msg_rsp_player_score(Msg, TrUserData) ->
 
 
 e_msg_rsp_player_score(#rsp_player_score{uid = F1,
-					 score = F2},
+					 score = F2, delta = F3},
 		       Bin, TrUserData) ->
     B1 = begin
 	   TrF1 = id(F1, TrUserData),
 	   e_type_int32(TrF1, <<Bin/binary, 8>>)
 	 end,
+    B2 = begin
+	   TrF2 = id(F2, TrUserData),
+	   e_type_int32(TrF2, <<B1/binary, 16>>)
+	 end,
     begin
-      TrF2 = id(F2, TrUserData),
-      e_type_int32(TrF2, <<B1/binary, 16>>)
+      TrF3 = id(F3, TrUserData),
+      e_type_int32(TrF3, <<B2/binary, 24>>)
     end.
 
 e_msg_rsp_score(Msg, TrUserData) ->
@@ -1847,231 +1858,253 @@ d_msg_pb_player(Bin, TrUserData) ->
 				 id(undefined, TrUserData),
 				 id(undefined, TrUserData),
 				 id(undefined, TrUserData), id([], TrUserData),
-				 TrUserData).
+				 id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_pb_player(<<10, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_name(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			   F6, F7, TrUserData);
+			   F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<16, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_uid(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			  F6, F7, TrUserData);
+			  F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<24, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_coins(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, F7, TrUserData);
+			    F5, F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<34, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_logo(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			   F6, F7, TrUserData);
+			   F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<40, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_owner(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, F7, TrUserData);
+			    F5, F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<48, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_index(Rest, Z1, Z2, F1, F2, F3, F4,
-			    F5, F6, F7, TrUserData);
+			    F5, F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<58, Rest/binary>>, Z1,
-			     Z2, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     d_field_pb_player_pai(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			  F6, F7, TrUserData);
+			  F6, F7, F8, TrUserData);
+dfp_read_field_def_pb_player(<<64, Rest/binary>>, Z1,
+			     Z2, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
+    d_field_pb_player_delta(Rest, Z1, Z2, F1, F2, F3, F4,
+			    F5, F6, F7, F8, TrUserData);
 dfp_read_field_def_pb_player(<<>>, 0, 0, F1, F2, F3, F4,
-			     F5, F6, F7, TrUserData) ->
+			     F5, F6, F7, F8, TrUserData) ->
     #pb_player{name = F1, uid = F2, coins = F3, logo = F4,
 	       owner = F5, index = F6,
-	       pai = lists_reverse(F7, TrUserData)};
+	       pai = lists_reverse(F7, TrUserData), delta = F8};
 dfp_read_field_def_pb_player(Other, Z1, Z2, F1, F2, F3,
-			     F4, F5, F6, F7, TrUserData) ->
+			     F4, F5, F6, F7, F8, TrUserData) ->
     dg_read_field_def_pb_player(Other, Z1, Z2, F1, F2, F3,
-				F4, F5, F6, F7, TrUserData).
+				F4, F5, F6, F7, F8, TrUserData).
 
 dg_read_field_def_pb_player(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+			    N, Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_pb_player(Rest, N + 7, X bsl N + Acc,
-				F1, F2, F3, F4, F5, F6, F7, TrUserData);
+				F1, F2, F3, F4, F5, F6, F7, F8, TrUserData);
 dg_read_field_def_pb_player(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+			    N, Acc, F1, F2, F3, F4, F5, F6, F7, F8,
+			    TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
 	  d_field_pb_player_name(Rest, 0, 0, F1, F2, F3, F4, F5,
-				 F6, F7, TrUserData);
+				 F6, F7, F8, TrUserData);
       16 ->
 	  d_field_pb_player_uid(Rest, 0, 0, F1, F2, F3, F4, F5,
-				F6, F7, TrUserData);
+				F6, F7, F8, TrUserData);
       24 ->
 	  d_field_pb_player_coins(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, F7, TrUserData);
+				  F6, F7, F8, TrUserData);
       34 ->
 	  d_field_pb_player_logo(Rest, 0, 0, F1, F2, F3, F4, F5,
-				 F6, F7, TrUserData);
+				 F6, F7, F8, TrUserData);
       40 ->
 	  d_field_pb_player_owner(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, F7, TrUserData);
+				  F6, F7, F8, TrUserData);
       48 ->
 	  d_field_pb_player_index(Rest, 0, 0, F1, F2, F3, F4, F5,
-				  F6, F7, TrUserData);
+				  F6, F7, F8, TrUserData);
       58 ->
 	  d_field_pb_player_pai(Rest, 0, 0, F1, F2, F3, F4, F5,
-				F6, F7, TrUserData);
+				F6, F7, F8, TrUserData);
+      64 ->
+	  d_field_pb_player_delta(Rest, 0, 0, F1, F2, F3, F4, F5,
+				  F6, F7, F8, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
 		skip_varint_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5,
-				      F6, F7, TrUserData);
+				      F6, F7, F8, TrUserData);
 	    1 ->
 		skip_64_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
-				  F7, TrUserData);
+				  F7, F8, TrUserData);
 	    2 ->
 		skip_length_delimited_pb_player(Rest, 0, 0, F1, F2, F3,
-						F4, F5, F6, F7, TrUserData);
+						F4, F5, F6, F7, F8, TrUserData);
 	    5 ->
 		skip_32_pb_player(Rest, 0, 0, F1, F2, F3, F4, F5, F6,
-				  F7, TrUserData)
+				  F7, F8, TrUserData)
 	  end
     end;
 dg_read_field_def_pb_player(<<>>, 0, 0, F1, F2, F3, F4,
-			    F5, F6, F7, TrUserData) ->
+			    F5, F6, F7, F8, TrUserData) ->
     #pb_player{name = F1, uid = F2, coins = F3, logo = F4,
 	       owner = F5, index = F6,
-	       pai = lists_reverse(F7, TrUserData)}.
+	       pai = lists_reverse(F7, TrUserData), delta = F8}.
 
 d_field_pb_player_name(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+		       Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_name(Rest, N + 7, X bsl N + Acc, F1,
-			   F2, F3, F4, F5, F6, F7, TrUserData);
+			   F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_name(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, _, F2, F3, F4, F5, F6, F7, TrUserData) ->
+		       Acc, _, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     Len = X bsl N + Acc,
     <<Utf8:Len/binary, Rest2/binary>> = Rest,
     NewFValue = unicode:characters_to_list(Utf8, unicode),
     dfp_read_field_def_pb_player(Rest2, 0, 0, NewFValue, F2,
-				 F3, F4, F5, F6, F7, TrUserData).
+				 F3, F4, F5, F6, F7, F8, TrUserData).
 
 
 d_field_pb_player_uid(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F1, F2, F3, F4, F5, F6, F7, TrUserData)
+		      F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_uid(Rest, N + 7, X bsl N + Acc, F1,
-			  F2, F3, F4, F5, F6, F7, TrUserData);
+			  F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_uid(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F1, _, F3, F4, F5, F6, F7, TrUserData) ->
+		      F1, _, F3, F4, F5, F6, F7, F8, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, NewFValue,
-				 F3, F4, F5, F6, F7, TrUserData).
+				 F3, F4, F5, F6, F7, F8, TrUserData).
 
 
 d_field_pb_player_coins(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_coins(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, F7, TrUserData);
+			    F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_coins(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, _, F4, F5, F6, F7, TrUserData) ->
+			Acc, F1, F2, _, F4, F5, F6, F7, F8, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2,
-				 NewFValue, F4, F5, F6, F7, TrUserData).
+				 NewFValue, F4, F5, F6, F7, F8, TrUserData).
 
 
 d_field_pb_player_logo(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+		       Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_logo(Rest, N + 7, X bsl N + Acc, F1,
-			   F2, F3, F4, F5, F6, F7, TrUserData);
+			   F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_logo(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F1, F2, F3, _, F5, F6, F7, TrUserData) ->
+		       Acc, F1, F2, F3, _, F5, F6, F7, F8, TrUserData) ->
     Len = X bsl N + Acc,
     <<Utf8:Len/binary, Rest2/binary>> = Rest,
     NewFValue = unicode:characters_to_list(Utf8, unicode),
     dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
-				 NewFValue, F5, F6, F7, TrUserData).
+				 NewFValue, F5, F6, F7, F8, TrUserData).
 
 
 d_field_pb_player_owner(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_owner(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, F7, TrUserData);
+			    F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_owner(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, _, F6, F7, TrUserData) ->
+			Acc, F1, F2, F3, F4, _, F6, F7, F8, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2, F3, F4,
-				 NewFValue, F6, F7, TrUserData).
+				 NewFValue, F6, F7, F8, TrUserData).
 
 
 d_field_pb_player_index(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+			Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_index(Rest, N + 7, X bsl N + Acc, F1,
-			    F2, F3, F4, F5, F6, F7, TrUserData);
+			    F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_index(<<0:1, X:7, Rest/binary>>, N,
-			Acc, F1, F2, F3, F4, F5, _, F7, TrUserData) ->
+			Acc, F1, F2, F3, F4, F5, _, F7, F8, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2, F3, F4,
-				 F5, NewFValue, F7, TrUserData).
+				 F5, NewFValue, F7, F8, TrUserData).
 
 
 d_field_pb_player_pai(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F1, F2, F3, F4, F5, F6, F7, TrUserData)
+		      F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
     when N < 57 ->
     d_field_pb_player_pai(Rest, N + 7, X bsl N + Acc, F1,
-			  F2, F3, F4, F5, F6, F7, TrUserData);
+			  F2, F3, F4, F5, F6, F7, F8, TrUserData);
 d_field_pb_player_pai(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     Len = X bsl N + Acc,
     <<Bs:Len/binary, Rest2/binary>> = Rest,
     NewFValue = id(d_msg_pb_unit(Bs, TrUserData),
 		   TrUserData),
     dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
 				 F4, F5, F6, cons(NewFValue, F7, TrUserData),
-				 TrUserData).
+				 F8, TrUserData).
+
+
+d_field_pb_player_delta(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F1, F2, F3, F4, F5, F6, F7, F8, TrUserData)
+    when N < 57 ->
+    d_field_pb_player_delta(Rest, N + 7, X bsl N + Acc, F1,
+			    F2, F3, F4, F5, F6, F7, F8, TrUserData);
+d_field_pb_player_delta(<<0:1, X:7, Rest/binary>>, N,
+			Acc, F1, F2, F3, F4, F5, F6, F7, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_player(Rest, 0, 0, F1, F2, F3, F4,
+				 F5, F6, F7, NewFValue, TrUserData).
 
 
 skip_varint_pb_player(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     skip_varint_pb_player(Rest, Z1, Z2, F1, F2, F3, F4, F5,
-			  F6, F7, TrUserData);
+			  F6, F7, F8, TrUserData);
 skip_varint_pb_player(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      F1, F2, F3, F4, F5, F6, F7, TrUserData) ->
+		      F1, F2, F3, F4, F5, F6, F7, F8, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, F7, TrUserData).
+				 F4, F5, F6, F7, F8, TrUserData).
 
 
 skip_length_delimited_pb_player(<<1:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, F4, F5, F6, F7, TrUserData)
+				N, Acc, F1, F2, F3, F4, F5, F6, F7, F8,
+				TrUserData)
     when N < 57 ->
     skip_length_delimited_pb_player(Rest, N + 7,
 				    X bsl N + Acc, F1, F2, F3, F4, F5, F6, F7,
-				    TrUserData);
+				    F8, TrUserData);
 skip_length_delimited_pb_player(<<0:1, X:7,
 				  Rest/binary>>,
-				N, Acc, F1, F2, F3, F4, F5, F6, F7,
+				N, Acc, F1, F2, F3, F4, F5, F6, F7, F8,
 				TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_pb_player(Rest2, 0, 0, F1, F2, F3,
-				 F4, F5, F6, F7, TrUserData).
+				 F4, F5, F6, F7, F8, TrUserData).
 
 
 skip_32_pb_player(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, F4, F5, F6, F7, TrUserData) ->
+		  F3, F4, F5, F6, F7, F8, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, F7, TrUserData).
+				 F4, F5, F6, F7, F8, TrUserData).
 
 
 skip_64_pb_player(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
-		  F3, F4, F5, F6, F7, TrUserData) ->
+		  F3, F4, F5, F6, F7, F8, TrUserData) ->
     dfp_read_field_def_pb_player(Rest, Z1, Z2, F1, F2, F3,
-				 F4, F5, F6, F7, TrUserData).
+				 F4, F5, F6, F7, F8, TrUserData).
 
 
 d_msg_rsp_join(Bin, TrUserData) ->
@@ -2631,123 +2664,148 @@ skip_64_rsp_leave(<<_:64, Rest/binary>>, Z1, Z2, F1,
 d_msg_rsp_player_score(Bin, TrUserData) ->
     dfp_read_field_def_rsp_player_score(Bin, 0, 0,
 					id(undefined, TrUserData),
+					id(undefined, TrUserData),
 					id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_player_score(<<8, Rest/binary>>,
-				    Z1, Z2, F1, F2, TrUserData) ->
-    d_field_rsp_player_score_uid(Rest, Z1, Z2, F1, F2,
+				    Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_score_uid(Rest, Z1, Z2, F1, F2, F3,
 				 TrUserData);
 dfp_read_field_def_rsp_player_score(<<16, Rest/binary>>,
-				    Z1, Z2, F1, F2, TrUserData) ->
-    d_field_rsp_player_score_score(Rest, Z1, Z2, F1, F2,
+				    Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_score_score(Rest, Z1, Z2, F1, F2, F3,
+				   TrUserData);
+dfp_read_field_def_rsp_player_score(<<24, Rest/binary>>,
+				    Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_player_score_delta(Rest, Z1, Z2, F1, F2, F3,
 				   TrUserData);
 dfp_read_field_def_rsp_player_score(<<>>, 0, 0, F1, F2,
-				    _) ->
-    #rsp_player_score{uid = F1, score = F2};
+				    F3, _) ->
+    #rsp_player_score{uid = F1, score = F2, delta = F3};
 dfp_read_field_def_rsp_player_score(Other, Z1, Z2, F1,
-				    F2, TrUserData) ->
+				    F2, F3, TrUserData) ->
     dg_read_field_def_rsp_player_score(Other, Z1, Z2, F1,
-				       F2, TrUserData).
+				       F2, F3, TrUserData).
 
 dg_read_field_def_rsp_player_score(<<1:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, F1, F2, TrUserData)
+				   N, Acc, F1, F2, F3, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_player_score(Rest, N + 7,
-				       X bsl N + Acc, F1, F2, TrUserData);
+				       X bsl N + Acc, F1, F2, F3, TrUserData);
 dg_read_field_def_rsp_player_score(<<0:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, F1, F2, TrUserData) ->
+				   N, Acc, F1, F2, F3, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_player_score_uid(Rest, 0, 0, F1, F2,
+	  d_field_rsp_player_score_uid(Rest, 0, 0, F1, F2, F3,
 				       TrUserData);
       16 ->
-	  d_field_rsp_player_score_score(Rest, 0, 0, F1, F2,
+	  d_field_rsp_player_score_score(Rest, 0, 0, F1, F2, F3,
+					 TrUserData);
+      24 ->
+	  d_field_rsp_player_score_delta(Rest, 0, 0, F1, F2, F3,
 					 TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_player_score(Rest, 0, 0, F1, F2,
+		skip_varint_rsp_player_score(Rest, 0, 0, F1, F2, F3,
 					     TrUserData);
 	    1 ->
-		skip_64_rsp_player_score(Rest, 0, 0, F1, F2,
+		skip_64_rsp_player_score(Rest, 0, 0, F1, F2, F3,
 					 TrUserData);
 	    2 ->
 		skip_length_delimited_rsp_player_score(Rest, 0, 0, F1,
-						       F2, TrUserData);
+						       F2, F3, TrUserData);
 	    5 ->
-		skip_32_rsp_player_score(Rest, 0, 0, F1, F2, TrUserData)
+		skip_32_rsp_player_score(Rest, 0, 0, F1, F2, F3,
+					 TrUserData)
 	  end
     end;
 dg_read_field_def_rsp_player_score(<<>>, 0, 0, F1, F2,
-				   _) ->
-    #rsp_player_score{uid = F1, score = F2}.
+				   F3, _) ->
+    #rsp_player_score{uid = F1, score = F2, delta = F3}.
 
 d_field_rsp_player_score_uid(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F1, F2, TrUserData)
+			     N, Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     d_field_rsp_player_score_uid(Rest, N + 7, X bsl N + Acc,
-				 F1, F2, TrUserData);
+				 F1, F2, F3, TrUserData);
 d_field_rsp_player_score_uid(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, _, F2, TrUserData) ->
+			     N, Acc, _, F2, F3, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_player_score(Rest, 0, 0,
-					NewFValue, F2, TrUserData).
+					NewFValue, F2, F3, TrUserData).
 
 
 d_field_rsp_player_score_score(<<1:1, X:7,
 				 Rest/binary>>,
-			       N, Acc, F1, F2, TrUserData)
+			       N, Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     d_field_rsp_player_score_score(Rest, N + 7,
-				   X bsl N + Acc, F1, F2, TrUserData);
+				   X bsl N + Acc, F1, F2, F3, TrUserData);
 d_field_rsp_player_score_score(<<0:1, X:7,
 				 Rest/binary>>,
-			       N, Acc, F1, _, TrUserData) ->
+			       N, Acc, F1, _, F3, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_player_score(Rest, 0, 0, F1,
+					NewFValue, F3, TrUserData).
+
+
+d_field_rsp_player_score_delta(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_rsp_player_score_delta(Rest, N + 7,
+				   X bsl N + Acc, F1, F2, F3, TrUserData);
+d_field_rsp_player_score_delta(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, F2, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_player_score(Rest, 0, 0, F1, F2,
 					NewFValue, TrUserData).
 
 
 skip_varint_rsp_player_score(<<1:1, _:7, Rest/binary>>,
-			     Z1, Z2, F1, F2, TrUserData) ->
-    skip_varint_rsp_player_score(Rest, Z1, Z2, F1, F2,
+			     Z1, Z2, F1, F2, F3, TrUserData) ->
+    skip_varint_rsp_player_score(Rest, Z1, Z2, F1, F2, F3,
 				 TrUserData);
 skip_varint_rsp_player_score(<<0:1, _:7, Rest/binary>>,
-			     Z1, Z2, F1, F2, TrUserData) ->
+			     Z1, Z2, F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_player_score(Rest, Z1, Z2, F1,
-					F2, TrUserData).
+					F2, F3, TrUserData).
 
 
 skip_length_delimited_rsp_player_score(<<1:1, X:7,
 					 Rest/binary>>,
-				       N, Acc, F1, F2, TrUserData)
+				       N, Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_player_score(Rest, N + 7,
-					   X bsl N + Acc, F1, F2, TrUserData);
+					   X bsl N + Acc, F1, F2, F3,
+					   TrUserData);
 skip_length_delimited_rsp_player_score(<<0:1, X:7,
 					 Rest/binary>>,
-				       N, Acc, F1, F2, TrUserData) ->
+				       N, Acc, F1, F2, F3, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_rsp_player_score(Rest2, 0, 0, F1, F2,
-					TrUserData).
+					F3, TrUserData).
 
 
 skip_32_rsp_player_score(<<_:32, Rest/binary>>, Z1, Z2,
-			 F1, F2, TrUserData) ->
+			 F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_player_score(Rest, Z1, Z2, F1,
-					F2, TrUserData).
+					F2, F3, TrUserData).
 
 
 skip_64_rsp_player_score(<<_:64, Rest/binary>>, Z1, Z2,
-			 F1, F2, TrUserData) ->
+			 F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_player_score(Rest, Z1, Z2, F1,
-					F2, TrUserData).
+					F2, F3, TrUserData).
 
 
 d_msg_rsp_score(Bin, TrUserData) ->
@@ -4649,10 +4707,10 @@ merge_msg_pb_room_info(#pb_room_info{},
 
 merge_msg_pb_player(#pb_player{name = PFname,
 			       coins = PFcoins, logo = PFlogo, owner = PFowner,
-			       pai = PFpai},
+			       pai = PFpai, delta = PFdelta},
 		    #pb_player{name = NFname, uid = NFuid, coins = NFcoins,
 			       logo = NFlogo, owner = NFowner, index = NFindex,
-			       pai = NFpai},
+			       pai = NFpai, delta = NFdelta},
 		    TrUserData) ->
     #pb_player{name =
 		   if NFname =:= undefined -> PFname;
@@ -4672,7 +4730,11 @@ merge_msg_pb_player(#pb_player{name = PFname,
 		      true -> NFowner
 		   end,
 	       index = NFindex,
-	       pai = 'erlang_++'(PFpai, NFpai, TrUserData)}.
+	       pai = 'erlang_++'(PFpai, NFpai, TrUserData),
+	       delta =
+		   if NFdelta =:= undefined -> PFdelta;
+		      true -> NFdelta
+		   end}.
 
 merge_msg_rsp_join(#rsp_join{players = PFplayers,
 			     room_info = PFroom_info},
@@ -4707,9 +4769,11 @@ merge_msg_rsp_leave(#rsp_leave{},
     #rsp_leave{status = NFstatus}.
 
 merge_msg_rsp_player_score(#rsp_player_score{},
-			   #rsp_player_score{uid = NFuid, score = NFscore},
+			   #rsp_player_score{uid = NFuid, score = NFscore,
+					     delta = NFdelta},
 			   _) ->
-    #rsp_player_score{uid = NFuid, score = NFscore}.
+    #rsp_player_score{uid = NFuid, score = NFscore,
+		      delta = NFdelta}.
 
 merge_msg_rsp_score(#rsp_score{},
 		    #rsp_score{status = NFstatus}, _) ->
@@ -4989,7 +5053,7 @@ v_msg_pb_room_info(X, Path, _TrUserData) ->
 -dialyzer({nowarn_function,v_msg_pb_player/3}).
 v_msg_pb_player(#pb_player{name = F1, uid = F2,
 			   coins = F3, logo = F4, owner = F5, index = F6,
-			   pai = F7},
+			   pai = F7, delta = F8},
 		Path, TrUserData) ->
     if F1 == undefined -> ok;
        true -> v_type_string(F1, [name | Path])
@@ -5012,6 +5076,9 @@ v_msg_pb_player(#pb_player{name = F1, uid = F2,
        true ->
 	   mk_type_error({invalid_list_of, {msg, pb_unit}}, F7,
 			 Path)
+    end,
+    if F8 == undefined -> ok;
+       true -> v_type_int32(F8, [delta | Path])
     end,
     ok;
 v_msg_pb_player(X, Path, _TrUserData) ->
@@ -5059,10 +5126,11 @@ v_msg_rsp_leave(#rsp_leave{status = F1}, Path, _) ->
 
 -dialyzer({nowarn_function,v_msg_rsp_player_score/3}).
 v_msg_rsp_player_score(#rsp_player_score{uid = F1,
-					 score = F2},
+					 score = F2, delta = F3},
 		       Path, _) ->
     v_type_int32(F1, [uid | Path]),
     v_type_int32(F2, [score | Path]),
+    v_type_int32(F3, [delta | Path]),
     ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_score/3}).
@@ -5320,7 +5388,9 @@ get_msg_defs() ->
 	      occurrence = required, opts = []},
        #field{name = pai, fnum = 7, rnum = 8,
 	      type = {msg, pb_unit}, occurrence = repeated,
-	      opts = []}]},
+	      opts = []},
+       #field{name = delta, fnum = 8, rnum = 9, type = int32,
+	      occurrence = optional, opts = []}]},
      {{msg, rsp_join},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []},
@@ -5348,6 +5418,8 @@ get_msg_defs() ->
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []},
        #field{name = score, fnum = 2, rnum = 3, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = delta, fnum = 3, rnum = 4, type = int32,
 	      occurrence = required, opts = []}]},
      {{msg, rsp_score},
       [#field{name = status, fnum = 1, rnum = 2, type = int32,
@@ -5518,7 +5590,9 @@ find_msg_def(pb_player) ->
 	    occurrence = required, opts = []},
      #field{name = pai, fnum = 7, rnum = 8,
 	    type = {msg, pb_unit}, occurrence = repeated,
-	    opts = []}];
+	    opts = []},
+     #field{name = delta, fnum = 8, rnum = 9, type = int32,
+	    occurrence = optional, opts = []}];
 find_msg_def(rsp_join) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []},
@@ -5546,6 +5620,8 @@ find_msg_def(rsp_player_score) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []},
      #field{name = score, fnum = 2, rnum = 3, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = delta, fnum = 3, rnum = 4, type = int32,
 	    occurrence = required, opts = []}];
 find_msg_def(rsp_score) ->
     [#field{name = status, fnum = 1, rnum = 2, type = int32,
