@@ -56,7 +56,7 @@ choose_banker(Players, BankerType) ->
 notify_cards(Cards) ->
   {Pbs, Uids} = maps:fold(fun(K, V, {In, T}) ->
     {In ++ [#{uid => K, pai => V}], T ++ [K]} end, {[], []}, Cards),
-  multi_cast(Uids, {mod_room, notify_cards, Pbs}).
+  multi_cast(Uids, {mod_room, notify_cards, [Pbs]}).
 
 get_cards(Uids) ->
   L = dhlist:shuffle(lists:seq(0, 51)),
