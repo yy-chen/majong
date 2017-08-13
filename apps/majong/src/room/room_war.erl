@@ -56,6 +56,7 @@ choose_banker(Players, BankerType) ->
 notify_cards(Cards) ->
   {Pbs, Uids} = maps:fold(fun(K, V, {In, T}) ->
     {In ++ [#{uid => K, pai => V}], T ++ [K]} end, {[], []}, Cards),
+  lager:info("notify cards : ~p", [Pbs]),
   multi_cast(Uids, {mod_room, notify_cards, [Pbs]}).
 
 get_cards(Uids) ->
