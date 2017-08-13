@@ -71,7 +71,7 @@ get_cards(Uids) ->
 
 zhuang(Uid, Base) ->
   #{c_zhuang := Zhuang, players := Players} = Room = load(),
-  Room1 = Room#{c_zhuang => #{Base => maps:get(Base, Zhuang) ++ [Uid]}},
+  Room1 = Room#{c_zhuang => Zhuang#{Base => maps:get(Base, Zhuang) ++ [Uid]}},
   #{1 := B, 2 := C, 3 := D} = Zhuang,
   L = lists:usort(B ++ C ++ D),
   if
