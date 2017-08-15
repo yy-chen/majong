@@ -77,7 +77,7 @@ zhuang(Uid, Base) ->
   L = lists:usort(B ++ C ++ D),
   lager:info("l : ~p lengt : ~p", [L, length(Players)]),
   if
-    L == length(Players) - 1 ->
+    length(L) == length(Players) ->
       {ZhuangUid, Base} = if
                       D =/= [] ->
                         N = rand:uniform(length(D)),
