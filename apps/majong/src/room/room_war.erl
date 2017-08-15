@@ -71,29 +71,30 @@ get_cards(Uids) ->
 
 zhuang(Uid, Base) ->
   #{c_zhuang := Zhuang, players := Players} = Room = load(),
-  Room1 = Room#{c_zhuang => Zhuang#{Base => maps:get(Base, Zhuang) ++ [Uid]}},
-  #{1 := B, 2 := C, 3 := D} = Zhuang,
+  Zhuang1 = Zhuang#{Base => maps:get(Base, Zhuang) ++ [Uid]},
+  Room1 = Room#{c_zhuang => Zhuang1},
+  #{1 := B, 2 := C, 3 := D} = Zhuang1,
   L = lists:usort(B ++ C ++ D),
   lager:info("l : ~p lengt : ~p", [L, length(Players)]),
   if
-    L == length(Players) ->
-      {Uid, Base} = if
+    L == length(Players) - 1 ->
+      {ZhuangUid, Base} = if
                       D =/= [] ->
                         N = rand:uniform(length(D)),
-                        Zhuang = lists:nth(N, D),
-                        {Zhuang, 3};
+                        ZhuangId = lists:nth(N, D),
+                        {ZhuangId, 3};
                       C =/= [] ->
                         N = rand:uniform(length(C)),
-                        Zhuang = lists:nth(N, C),
-                        {Zhuang, 2};
+                        ZhuangId = lists:nth(N, C),
+                        {ZhuangId, 2};
                       true ->
                         N = rand:uniform(length(B)),
-                        Zhuang = lists:nth(N, B),
-                        {Zhuang, 1}
+                        ZhuangId = lists:nth(N, B),
+                        {ZhuangId, 1}
                     end,
-      lager:info("notify zhuang : ~p ~p", [Uid, Base]),
-      down(Room1#{zhuang => {Uid, Base}}),
-      multi_cast(Players, {mod_room, notify_zhuang, [Uid, Base]});
+      lager:info("notify zhuang : ~p ~p", [ZhuangUid, Base]),
+      down(Room1#{zhuang => {ZhuangUid, Base}}),
+      multi_cast(Players, {mod_room, notify_zhuang, [ZhuangUid, Base]});
     true ->
       down(Room1)
   end.
