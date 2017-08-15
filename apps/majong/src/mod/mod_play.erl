@@ -43,7 +43,7 @@ login(Bin) ->
   mod_play:id(Uid),
   gproc:register_name({n, l, {uid, Uid}}, self()),
   lager:info("uid : ~p", [Uid]),
-  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121, logo = Logo, name = Name}).
+  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121, logo = Logo, name = Name, uid = Uid}).
 
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),
