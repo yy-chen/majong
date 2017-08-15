@@ -48,6 +48,8 @@ niu(Pokers) ->
 %% L1 > L2 -> 1   L1 < L2 -> 0
 -spec cmp([#{id => integer(), type => integer()}], list()) -> ok.
 cmp(L1, L2) ->
+  lager:info("cmp l1 : ~p", [L1]),
+  lager:info("cmp l2 : ~p", [L2]),
   Score1 = niu([P || #{id := P} <- L1]),
   Score2 = niu([P || #{id := P} <- L2]),
   [N1, N2, N3, N4, N5] = lists:reverse(lists:sort([(5 - Type) * 100 + Id || #{id := Id, type := Type} <- L1])),
