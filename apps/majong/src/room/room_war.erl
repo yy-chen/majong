@@ -76,6 +76,7 @@ zhuang(Uid, Base) ->
   #{1 := B, 2 := C, 3 := D} = Zhuang1,
   L = lists:usort(B ++ C ++ D),
   lager:info("l : ~p lengt : ~p", [L, length(Players)]),
+  multi_cast(Players, {mod_room, notify_zhuang, [Uid, Base]}),
   if
     length(L) == length(Players) ->
       {ZhuangUid, Base} = if
@@ -94,7 +95,7 @@ zhuang(Uid, Base) ->
                     end,
       lager:info("notify zhuang : ~p ~p", [ZhuangUid, Base]),
       down(Room1#{zhuang => {ZhuangUid, Base}}),
-      multi_cast(Players, {mod_room, notify_zhuang, [ZhuangUid, Base]});
+      multi_cast(Players, {mod_room, notify_zhuang_end, [ZhuangUid, Base]});
     true ->
       down(Room1)
   end.
