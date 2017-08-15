@@ -80,7 +80,7 @@ zhuang(Uid, Base) ->
   multi_cast(Players, {mod_room, notify_zhuang, [Uid, Base]}),
   if
     length(L) == length(Players) ->
-      {ZhuangUid, Base} = if
+      {ZhuangUid, Base1} = if
                       D =/= [] ->
                         N = rand:uniform(length(D)),
                         ZhuangId = lists:nth(N, D),
@@ -94,9 +94,9 @@ zhuang(Uid, Base) ->
                         ZhuangId = lists:nth(N, B),
                         {ZhuangId, 1}
                     end,
-      lager:info("notify zhuang : ~p ~p", [ZhuangUid, Base]),
-      down(Room1#{zhuang => {ZhuangUid, Base}}),
-      multi_cast(Players, {mod_room, notify_zhuang_end, [ZhuangUid, Base]});
+      lager:info("notify zhuang : ~p ~p", [ZhuangUid, Base1]),
+      down(Room1#{zhuang => {ZhuangUid, Base1}}),
+      multi_cast(Players, {mod_room, notify_zhuang_end, [ZhuangUid, Base1]});
     true ->
       down(Room1)
   end.
