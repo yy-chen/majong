@@ -22,7 +22,7 @@ choose_banker(Players, BankerType) ->
   Info = init(),
   Cards = get_cards(Uids),
   down(Info#{players => Uids, cards => Cards}),
-  notify_cards(Cards),
+%%  notify_cards(Cards),
   case BankerType of   %% 2: 轮庄 3: 随机庄  4: 固定庄
     1 -> undefined;
     2 ->
@@ -98,7 +98,7 @@ zhuang(Uid, Base) ->
 
 score(Uid, Score) ->
   Info = load(),
-  #{zhuang := {Zhuang, Base}, cards := C, total := Total, players := Uids} = Info,
+  #{zhuang := {Zhuang, Base}, cards := C, total := Total, players := Uids, score := Scores} = Info,
   Cards1 = maps:get(Uid, C),
   Cards2 = maps:get(Zhuang, C),
   Add = case pokers_type:cmp(Cards1, Cards2) of
@@ -107,8 +107,13 @@ score(Uid, Score) ->
         end,
   ZhuangScore = maps:get(Zhuang, Total, 0),
   UidScore = maps:get(Uid, Total, 0),
-  down(Info#{total => #{Uid => UidScore + Add, Zhuang => ZhuangScore - Add}}),
-  multi_cast(Uids, {mod_room, notify_score, [Uid, Score, Add]}).
+  down(Info#{total => #{Uid => UidScore + Add, Zhuang => ZhuangScore - Add}, score => Scores#{Uid => Add}}),
+  multi_cast(Uids, {mod_room, notify_score, [Uid, Score, Add]}),
+  N = length(Uids) - maps:size(Scores),
+  if
+    N == 2 -> notify_cards(C);
+    true -> ok
+  end.
 
 trans(Num) ->
   Type = trunc(Num / 13) + 1,
