@@ -79,7 +79,9 @@ dispatch(<<G:32, C:32, Bin/binary>>) ->
   lager:info("g : ~p c : ~p", [G, C]),
   case G of
     1 -> mod_play:dispatch(C, Bin);
-    2 -> mod_room:dispatch(C, Bin)
+    2 -> mod_room:dispatch(C, Bin);
+    4 -> mod_feedback:dispatch(C, Bin);
+    5 -> mod_pay:dispatch(C, Bin)
   end.
 
 rsp(G, C, R) ->

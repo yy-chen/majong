@@ -32,6 +32,21 @@
         }).
 -endif.
 
+-ifndef('RSP_PAY_PB_H').
+-define('RSP_PAY_PB_H', true).
+-record(rsp_pay,
+        {status,                        % = 1, int32
+         coins                          % = 2, int32 (optional)
+        }).
+-endif.
+
+-ifndef('REQ_PAY_PB_H').
+-define('REQ_PAY_PB_H', true).
+-record(req_pay,
+        {rmb                            % = 1, int32
+        }).
+-endif.
+
 -ifndef('REQ_READY_PB_H').
 -define('REQ_READY_PB_H', true).
 -record(req_ready,
@@ -89,7 +104,7 @@
          coins,                         % = 3, int32 (optional)
          logo,                          % = 4, string (optional)
          owner,                         % = 5, int32 (optional)
-         index,                         % = 6, int32
+         index,                         % = 6, int32 (optional)
          pai = [],                      % = 7, [{msg,pb_unit}]
          delta                          % = 8, int32 (optional)
         }).
@@ -101,6 +116,22 @@
         {status,                        % = 1, sint32
          players = [],                  % = 2, [{msg,pb_player}]
          room_info                      % = 3, {msg,pb_room_info} (optional)
+        }).
+-endif.
+
+-ifndef('RSP_TASK_CLAIM_PB_H').
+-define('RSP_TASK_CLAIM_PB_H', true).
+-record(rsp_task_claim,
+        {status                         % = 1, int32
+        }).
+-endif.
+
+-ifndef('PB_TASK_PB_H').
+-define('PB_TASK_PB_H', true).
+-record(pb_task,
+        {id,                            % = 1, int32
+         num,                           % = 2, int32
+         recive                         % = 3, int32
         }).
 -endif.
 
@@ -176,6 +207,13 @@
         }).
 -endif.
 
+-ifndef('REQ_TASK_CLAIM_PB_H').
+-define('REQ_TASK_CLAIM_PB_H', true).
+-record(req_task_claim,
+        {id                             % = 1, int32
+        }).
+-endif.
+
 -ifndef('REQ_CREATE_ROOM_PB_H').
 -define('REQ_CREATE_ROOM_PB_H', true).
 -record(req_create_room,
@@ -184,6 +222,13 @@
          banker,                        % = 3, int32
          special,                       % = 4, int32
          type                           % = 5, int32
+        }).
+-endif.
+
+-ifndef('REQ_TASK_PB_H').
+-define('REQ_TASK_PB_H', true).
+-record(req_task,
+        {
         }).
 -endif.
 
@@ -232,6 +277,13 @@
         }).
 -endif.
 
+-ifndef('RSP_TASK_PB_H').
+-define('RSP_TASK_PB_H', true).
+-record(rsp_task,
+        {tasks = []                     % = 1, [{msg,pb_task}]
+        }).
+-endif.
+
 -ifndef('REQ_SCORE_PB_H').
 -define('REQ_SCORE_PB_H', true).
 -record(req_score,
@@ -243,6 +295,21 @@
 -define('REQ_LEAVE_PB_H', true).
 -record(req_leave,
         {uid                            % = 1, int32
+        }).
+-endif.
+
+-ifndef('RSP_CONTENT_PB_H').
+-define('RSP_CONTENT_PB_H', true).
+-record(rsp_content,
+        {status                         % = 1, int32
+        }).
+-endif.
+
+-ifndef('REQ_CONTENT_PB_H').
+-define('REQ_CONTENT_PB_H', true).
+-record(req_content,
+        {weixin,                        % = 1, string
+         text                           % = 2, string
         }).
 -endif.
 

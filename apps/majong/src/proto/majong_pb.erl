@@ -41,6 +41,8 @@ encode_msg(Msg, Opts) ->
       #req_login{} -> e_msg_req_login(Msg, TrUserData);
       #rsp_create_room{} ->
 	  e_msg_rsp_create_room(Msg, TrUserData);
+      #rsp_pay{} -> e_msg_rsp_pay(Msg, TrUserData);
+      #req_pay{} -> e_msg_req_pay(Msg, TrUserData);
       #req_ready{} -> e_msg_req_ready(Msg, TrUserData);
       #req_zhuang{} -> e_msg_req_zhuang(Msg, TrUserData);
       #pb_unit{} -> e_msg_pb_unit(Msg, TrUserData);
@@ -50,6 +52,9 @@ encode_msg(Msg, Opts) ->
       #pb_room_info{} -> e_msg_pb_room_info(Msg, TrUserData);
       #pb_player{} -> e_msg_pb_player(Msg, TrUserData);
       #rsp_join{} -> e_msg_rsp_join(Msg, TrUserData);
+      #rsp_task_claim{} ->
+	  e_msg_rsp_task_claim(Msg, TrUserData);
+      #pb_task{} -> e_msg_pb_task(Msg, TrUserData);
       #rsp_player_zhuang{} ->
 	  e_msg_rsp_player_zhuang(Msg, TrUserData);
       #rsp_zhuang{} -> e_msg_rsp_zhuang(Msg, TrUserData);
@@ -64,8 +69,11 @@ encode_msg(Msg, Opts) ->
       #rsp_new_player{} ->
 	  e_msg_rsp_new_player(Msg, TrUserData);
       #rsp_login{} -> e_msg_rsp_login(Msg, TrUserData);
+      #req_task_claim{} ->
+	  e_msg_req_task_claim(Msg, TrUserData);
       #req_create_room{} ->
 	  e_msg_req_create_room(Msg, TrUserData);
+      #req_task{} -> e_msg_req_task(Msg, TrUserData);
       #rsp_player_ready{} ->
 	  e_msg_rsp_player_ready(Msg, TrUserData);
       #rsp_ready{} -> e_msg_rsp_ready(Msg, TrUserData);
@@ -74,8 +82,11 @@ encode_msg(Msg, Opts) ->
       #rsp_result{} -> e_msg_rsp_result(Msg, TrUserData);
       #req_start{} -> e_msg_req_start(Msg, TrUserData);
       #rsp_chat{} -> e_msg_rsp_chat(Msg, TrUserData);
+      #rsp_task{} -> e_msg_rsp_task(Msg, TrUserData);
       #req_score{} -> e_msg_req_score(Msg, TrUserData);
       #req_leave{} -> e_msg_req_leave(Msg, TrUserData);
+      #rsp_content{} -> e_msg_rsp_content(Msg, TrUserData);
+      #req_content{} -> e_msg_req_content(Msg, TrUserData);
       #req_chat{} -> e_msg_req_chat(Msg, TrUserData);
       #rsp_pub{} -> e_msg_rsp_pub(Msg, TrUserData);
       #req_pub{} -> e_msg_req_pub(Msg, TrUserData)
@@ -146,6 +157,34 @@ e_msg_rsp_create_room(#rsp_create_room{status = F1,
 	     TrF3 = id(F3, TrUserData),
 	     e_type_int32(TrF3, <<B2/binary, 24>>)
 	   end
+    end.
+
+e_msg_rsp_pay(Msg, TrUserData) ->
+    e_msg_rsp_pay(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_pay(#rsp_pay{status = F1, coins = F2}, Bin,
+	      TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_int32(TrF1, <<Bin/binary, 8>>)
+	 end,
+    if F2 == undefined -> B1;
+       true ->
+	   begin
+	     TrF2 = id(F2, TrUserData),
+	     e_type_int32(TrF2, <<B1/binary, 16>>)
+	   end
+    end.
+
+e_msg_req_pay(Msg, TrUserData) ->
+    e_msg_req_pay(Msg, <<>>, TrUserData).
+
+
+e_msg_req_pay(#req_pay{rmb = F1}, Bin, TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
     end.
 
 e_msg_req_ready(Msg, TrUserData) ->
@@ -287,9 +326,12 @@ e_msg_pb_player(#pb_player{name = F1, uid = F2,
 		  e_type_int32(TrF5, <<B4/binary, 40>>)
 		end
 	 end,
-    B6 = begin
-	   TrF6 = id(F6, TrUserData),
-	   e_type_int32(TrF6, <<B5/binary, 48>>)
+    B6 = if F6 == undefined -> B5;
+	    true ->
+		begin
+		  TrF6 = id(F6, TrUserData),
+		  e_type_int32(TrF6, <<B5/binary, 48>>)
+		end
 	 end,
     B7 = begin
 	   TrF7 = id(F7, TrUserData),
@@ -329,6 +371,36 @@ e_msg_rsp_join(#rsp_join{status = F1, players = F2,
 	     e_mfield_rsp_join_room_info(TrF3, <<B2/binary, 26>>,
 					 TrUserData)
 	   end
+    end.
+
+e_msg_rsp_task_claim(Msg, TrUserData) ->
+    e_msg_rsp_task_claim(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_task_claim(#rsp_task_claim{status = F1}, Bin,
+		     TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_pb_task(Msg, TrUserData) ->
+    e_msg_pb_task(Msg, <<>>, TrUserData).
+
+
+e_msg_pb_task(#pb_task{id = F1, num = F2, recive = F3},
+	      Bin, TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_int32(TrF1, <<Bin/binary, 8>>)
+	 end,
+    B2 = begin
+	   TrF2 = id(F2, TrUserData),
+	   e_type_int32(TrF2, <<B1/binary, 16>>)
+	 end,
+    begin
+      TrF3 = id(F3, TrUserData),
+      e_type_int32(TrF3, <<B2/binary, 24>>)
     end.
 
 e_msg_rsp_player_zhuang(Msg, TrUserData) ->
@@ -486,6 +558,17 @@ e_msg_rsp_login(#rsp_login{status = F1, coins = F2,
 	   end
     end.
 
+e_msg_req_task_claim(Msg, TrUserData) ->
+    e_msg_req_task_claim(Msg, <<>>, TrUserData).
+
+
+e_msg_req_task_claim(#req_task_claim{id = F1}, Bin,
+		     TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
 e_msg_req_create_room(Msg, TrUserData) ->
     e_msg_req_create_room(Msg, <<>>, TrUserData).
 
@@ -514,6 +597,8 @@ e_msg_req_create_room(#req_create_room{round = F1,
       TrF5 = id(F5, TrUserData),
       e_type_int32(TrF5, <<B4/binary, 40>>)
     end.
+
+e_msg_req_task(_Msg, _TrUserData) -> <<>>.
 
 e_msg_rsp_player_ready(Msg, TrUserData) ->
     e_msg_rsp_player_ready(Msg, <<>>, TrUserData).
@@ -595,6 +680,19 @@ e_msg_rsp_chat(#rsp_chat{status = F1}, Bin,
       e_type_int32(TrF1, <<Bin/binary, 8>>)
     end.
 
+e_msg_rsp_task(Msg, TrUserData) ->
+    e_msg_rsp_task(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_task(#rsp_task{tasks = F1}, Bin,
+	       TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      if TrF1 == [] -> Bin;
+	 true -> e_field_rsp_task_tasks(TrF1, Bin, TrUserData)
+      end
+    end.
+
 e_msg_req_score(Msg, TrUserData) ->
     e_msg_req_score(Msg, <<>>, TrUserData).
 
@@ -615,6 +713,32 @@ e_msg_req_leave(#req_leave{uid = F1}, Bin,
     begin
       TrF1 = id(F1, TrUserData),
       e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_rsp_content(Msg, TrUserData) ->
+    e_msg_rsp_content(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_content(#rsp_content{status = F1}, Bin,
+		  TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_req_content(Msg, TrUserData) ->
+    e_msg_req_content(Msg, <<>>, TrUserData).
+
+
+e_msg_req_content(#req_content{weixin = F1, text = F2},
+		  Bin, TrUserData) ->
+    B1 = begin
+	   TrF1 = id(F1, TrUserData),
+	   e_type_string(TrF1, <<Bin/binary, 10>>)
+	 end,
+    begin
+      TrF2 = id(F2, TrUserData),
+      e_type_string(TrF2, <<B1/binary, 18>>)
     end.
 
 e_msg_req_chat(Msg, TrUserData) ->
@@ -706,6 +830,19 @@ e_field_rsp_result_players([Elem | Rest], Bin,
     e_field_rsp_result_players(Rest, Bin3, TrUserData);
 e_field_rsp_result_players([], Bin, _TrUserData) -> Bin.
 
+e_mfield_rsp_task_tasks(Msg, Bin, TrUserData) ->
+    SubBin = e_msg_pb_task(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_rsp_task_tasks([Elem | Rest], Bin,
+		       TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_rsp_task_tasks(id(Elem, TrUserData),
+				   Bin2, TrUserData),
+    e_field_rsp_task_tasks(Rest, Bin3, TrUserData);
+e_field_rsp_task_tasks([], Bin, _TrUserData) -> Bin.
+
 
 
 e_type_sint(Value, Bin) when Value >= 0 ->
@@ -742,6 +879,8 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       req_login -> d_msg_req_login(Bin, TrUserData);
       rsp_create_room ->
 	  d_msg_rsp_create_room(Bin, TrUserData);
+      rsp_pay -> d_msg_rsp_pay(Bin, TrUserData);
+      req_pay -> d_msg_req_pay(Bin, TrUserData);
       req_ready -> d_msg_req_ready(Bin, TrUserData);
       req_zhuang -> d_msg_req_zhuang(Bin, TrUserData);
       pb_unit -> d_msg_pb_unit(Bin, TrUserData);
@@ -750,6 +889,8 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       pb_room_info -> d_msg_pb_room_info(Bin, TrUserData);
       pb_player -> d_msg_pb_player(Bin, TrUserData);
       rsp_join -> d_msg_rsp_join(Bin, TrUserData);
+      rsp_task_claim -> d_msg_rsp_task_claim(Bin, TrUserData);
+      pb_task -> d_msg_pb_task(Bin, TrUserData);
       rsp_player_zhuang ->
 	  d_msg_rsp_player_zhuang(Bin, TrUserData);
       rsp_zhuang -> d_msg_rsp_zhuang(Bin, TrUserData);
@@ -762,8 +903,10 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_zhuang_end -> d_msg_rsp_zhuang_end(Bin, TrUserData);
       rsp_new_player -> d_msg_rsp_new_player(Bin, TrUserData);
       rsp_login -> d_msg_rsp_login(Bin, TrUserData);
+      req_task_claim -> d_msg_req_task_claim(Bin, TrUserData);
       req_create_room ->
 	  d_msg_req_create_room(Bin, TrUserData);
+      req_task -> d_msg_req_task(Bin, TrUserData);
       rsp_player_ready ->
 	  d_msg_rsp_player_ready(Bin, TrUserData);
       rsp_ready -> d_msg_rsp_ready(Bin, TrUserData);
@@ -772,8 +915,11 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_result -> d_msg_rsp_result(Bin, TrUserData);
       req_start -> d_msg_req_start(Bin, TrUserData);
       rsp_chat -> d_msg_rsp_chat(Bin, TrUserData);
+      rsp_task -> d_msg_rsp_task(Bin, TrUserData);
       req_score -> d_msg_req_score(Bin, TrUserData);
       req_leave -> d_msg_req_leave(Bin, TrUserData);
+      rsp_content -> d_msg_rsp_content(Bin, TrUserData);
+      req_content -> d_msg_req_content(Bin, TrUserData);
       req_chat -> d_msg_req_chat(Bin, TrUserData);
       rsp_pub -> d_msg_rsp_pub(Bin, TrUserData);
       req_pub -> d_msg_req_pub(Bin, TrUserData)
@@ -1153,6 +1299,195 @@ skip_64_rsp_create_room(<<_:64, Rest/binary>>, Z1, Z2,
 			F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_create_room(Rest, Z1, Z2, F1, F2,
 				       F3, TrUserData).
+
+
+d_msg_rsp_pay(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_pay(Bin, 0, 0,
+			       id(undefined, TrUserData),
+			       id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_pay(<<8, Rest/binary>>, Z1, Z2,
+			   F1, F2, TrUserData) ->
+    d_field_rsp_pay_status(Rest, Z1, Z2, F1, F2,
+			   TrUserData);
+dfp_read_field_def_rsp_pay(<<16, Rest/binary>>, Z1, Z2,
+			   F1, F2, TrUserData) ->
+    d_field_rsp_pay_coins(Rest, Z1, Z2, F1, F2, TrUserData);
+dfp_read_field_def_rsp_pay(<<>>, 0, 0, F1, F2, _) ->
+    #rsp_pay{status = F1, coins = F2};
+dfp_read_field_def_rsp_pay(Other, Z1, Z2, F1, F2,
+			   TrUserData) ->
+    dg_read_field_def_rsp_pay(Other, Z1, Z2, F1, F2,
+			      TrUserData).
+
+dg_read_field_def_rsp_pay(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_pay(Rest, N + 7, X bsl N + Acc,
+			      F1, F2, TrUserData);
+dg_read_field_def_rsp_pay(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_rsp_pay_status(Rest, 0, 0, F1, F2, TrUserData);
+      16 ->
+	  d_field_rsp_pay_coins(Rest, 0, 0, F1, F2, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_rsp_pay(Rest, 0, 0, F1, F2, TrUserData);
+	    1 -> skip_64_rsp_pay(Rest, 0, 0, F1, F2, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_pay(Rest, 0, 0, F1, F2,
+					      TrUserData);
+	    5 -> skip_32_rsp_pay(Rest, 0, 0, F1, F2, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_pay(<<>>, 0, 0, F1, F2, _) ->
+    #rsp_pay{status = F1, coins = F2}.
+
+d_field_rsp_pay_status(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_rsp_pay_status(Rest, N + 7, X bsl N + Acc, F1,
+			   F2, TrUserData);
+d_field_rsp_pay_status(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, _, F2, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_pay(Rest, 0, 0, NewFValue, F2,
+			       TrUserData).
+
+
+d_field_rsp_pay_coins(<<1:1, X:7, Rest/binary>>, N, Acc,
+		      F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_rsp_pay_coins(Rest, N + 7, X bsl N + Acc, F1,
+			  F2, TrUserData);
+d_field_rsp_pay_coins(<<0:1, X:7, Rest/binary>>, N, Acc,
+		      F1, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_pay(Rest, 0, 0, F1, NewFValue,
+			       TrUserData).
+
+
+skip_varint_rsp_pay(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, TrUserData) ->
+    skip_varint_rsp_pay(Rest, Z1, Z2, F1, F2, TrUserData);
+skip_varint_rsp_pay(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_pay(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
+
+
+skip_length_delimited_rsp_pay(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_pay(Rest, N + 7,
+				  X bsl N + Acc, F1, F2, TrUserData);
+skip_length_delimited_rsp_pay(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_pay(Rest2, 0, 0, F1, F2,
+			       TrUserData).
+
+
+skip_32_rsp_pay(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
+		TrUserData) ->
+    dfp_read_field_def_rsp_pay(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
+
+
+skip_64_rsp_pay(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
+		TrUserData) ->
+    dfp_read_field_def_rsp_pay(Rest, Z1, Z2, F1, F2,
+			       TrUserData).
+
+
+d_msg_req_pay(Bin, TrUserData) ->
+    dfp_read_field_def_req_pay(Bin, 0, 0,
+			       id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_req_pay(<<8, Rest/binary>>, Z1, Z2,
+			   F1, TrUserData) ->
+    d_field_req_pay_rmb(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_req_pay(<<>>, 0, 0, F1, _) ->
+    #req_pay{rmb = F1};
+dfp_read_field_def_req_pay(Other, Z1, Z2, F1,
+			   TrUserData) ->
+    dg_read_field_def_req_pay(Other, Z1, Z2, F1,
+			      TrUserData).
+
+dg_read_field_def_req_pay(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_pay(Rest, N + 7, X bsl N + Acc,
+			      F1, TrUserData);
+dg_read_field_def_req_pay(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 -> d_field_req_pay_rmb(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_req_pay(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_req_pay(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_req_pay(Rest, 0, 0, F1,
+					      TrUserData);
+	    5 -> skip_32_req_pay(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_req_pay(<<>>, 0, 0, F1, _) ->
+    #req_pay{rmb = F1}.
+
+d_field_req_pay_rmb(<<1:1, X:7, Rest/binary>>, N, Acc,
+		    F1, TrUserData)
+    when N < 57 ->
+    d_field_req_pay_rmb(Rest, N + 7, X bsl N + Acc, F1,
+			TrUserData);
+d_field_req_pay_rmb(<<0:1, X:7, Rest/binary>>, N, Acc,
+		    _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_req_pay(Rest, 0, 0, NewFValue,
+			       TrUserData).
+
+
+skip_varint_req_pay(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, TrUserData) ->
+    skip_varint_req_pay(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_req_pay(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, TrUserData) ->
+    dfp_read_field_def_req_pay(Rest, Z1, Z2, F1,
+			       TrUserData).
+
+
+skip_length_delimited_req_pay(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_pay(Rest, N + 7,
+				  X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_req_pay(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_pay(Rest2, 0, 0, F1, TrUserData).
+
+
+skip_32_req_pay(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		TrUserData) ->
+    dfp_read_field_def_req_pay(Rest, Z1, Z2, F1,
+			       TrUserData).
+
+
+skip_64_req_pay(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		TrUserData) ->
+    dfp_read_field_def_req_pay(Rest, Z1, Z2, F1,
+			       TrUserData).
 
 
 d_msg_req_ready(Bin, TrUserData) ->
@@ -2260,6 +2595,229 @@ skip_64_rsp_join(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 				TrUserData).
 
 
+d_msg_rsp_task_claim(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_task_claim(Bin, 0, 0,
+				      id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_task_claim(<<8, Rest/binary>>,
+				  Z1, Z2, F1, TrUserData) ->
+    d_field_rsp_task_claim_status(Rest, Z1, Z2, F1,
+				  TrUserData);
+dfp_read_field_def_rsp_task_claim(<<>>, 0, 0, F1, _) ->
+    #rsp_task_claim{status = F1};
+dfp_read_field_def_rsp_task_claim(Other, Z1, Z2, F1,
+				  TrUserData) ->
+    dg_read_field_def_rsp_task_claim(Other, Z1, Z2, F1,
+				     TrUserData).
+
+dg_read_field_def_rsp_task_claim(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_task_claim(Rest, N + 7,
+				     X bsl N + Acc, F1, TrUserData);
+dg_read_field_def_rsp_task_claim(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_rsp_task_claim_status(Rest, 0, 0, F1,
+					TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_rsp_task_claim(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_task_claim(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_task_claim(Rest, 0, 0, F1,
+						     TrUserData);
+	    5 -> skip_32_rsp_task_claim(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_task_claim(<<>>, 0, 0, F1, _) ->
+    #rsp_task_claim{status = F1}.
+
+d_field_rsp_task_claim_status(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_task_claim_status(Rest, N + 7,
+				  X bsl N + Acc, F1, TrUserData);
+d_field_rsp_task_claim_status(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_task_claim(Rest, 0, 0, NewFValue,
+				      TrUserData).
+
+
+skip_varint_rsp_task_claim(<<1:1, _:7, Rest/binary>>,
+			   Z1, Z2, F1, TrUserData) ->
+    skip_varint_rsp_task_claim(Rest, Z1, Z2, F1,
+			       TrUserData);
+skip_varint_rsp_task_claim(<<0:1, _:7, Rest/binary>>,
+			   Z1, Z2, F1, TrUserData) ->
+    dfp_read_field_def_rsp_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
+skip_length_delimited_rsp_task_claim(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_task_claim(Rest, N + 7,
+					 X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_rsp_task_claim(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_task_claim(Rest2, 0, 0, F1,
+				      TrUserData).
+
+
+skip_32_rsp_task_claim(<<_:32, Rest/binary>>, Z1, Z2,
+		       F1, TrUserData) ->
+    dfp_read_field_def_rsp_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
+skip_64_rsp_task_claim(<<_:64, Rest/binary>>, Z1, Z2,
+		       F1, TrUserData) ->
+    dfp_read_field_def_rsp_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
+d_msg_pb_task(Bin, TrUserData) ->
+    dfp_read_field_def_pb_task(Bin, 0, 0,
+			       id(undefined, TrUserData),
+			       id(undefined, TrUserData),
+			       id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_pb_task(<<8, Rest/binary>>, Z1, Z2,
+			   F1, F2, F3, TrUserData) ->
+    d_field_pb_task_id(Rest, Z1, Z2, F1, F2, F3,
+		       TrUserData);
+dfp_read_field_def_pb_task(<<16, Rest/binary>>, Z1, Z2,
+			   F1, F2, F3, TrUserData) ->
+    d_field_pb_task_num(Rest, Z1, Z2, F1, F2, F3,
+			TrUserData);
+dfp_read_field_def_pb_task(<<24, Rest/binary>>, Z1, Z2,
+			   F1, F2, F3, TrUserData) ->
+    d_field_pb_task_recive(Rest, Z1, Z2, F1, F2, F3,
+			   TrUserData);
+dfp_read_field_def_pb_task(<<>>, 0, 0, F1, F2, F3, _) ->
+    #pb_task{id = F1, num = F2, recive = F3};
+dfp_read_field_def_pb_task(Other, Z1, Z2, F1, F2, F3,
+			   TrUserData) ->
+    dg_read_field_def_pb_task(Other, Z1, Z2, F1, F2, F3,
+			      TrUserData).
+
+dg_read_field_def_pb_task(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, F3, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_pb_task(Rest, N + 7, X bsl N + Acc,
+			      F1, F2, F3, TrUserData);
+dg_read_field_def_pb_task(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F1, F2, F3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_pb_task_id(Rest, 0, 0, F1, F2, F3, TrUserData);
+      16 ->
+	  d_field_pb_task_num(Rest, 0, 0, F1, F2, F3, TrUserData);
+      24 ->
+	  d_field_pb_task_recive(Rest, 0, 0, F1, F2, F3,
+				 TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_pb_task(Rest, 0, 0, F1, F2, F3, TrUserData);
+	    1 ->
+		skip_64_pb_task(Rest, 0, 0, F1, F2, F3, TrUserData);
+	    2 ->
+		skip_length_delimited_pb_task(Rest, 0, 0, F1, F2, F3,
+					      TrUserData);
+	    5 -> skip_32_pb_task(Rest, 0, 0, F1, F2, F3, TrUserData)
+	  end
+    end;
+dg_read_field_def_pb_task(<<>>, 0, 0, F1, F2, F3, _) ->
+    #pb_task{id = F1, num = F2, recive = F3}.
+
+d_field_pb_task_id(<<1:1, X:7, Rest/binary>>, N, Acc,
+		   F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_pb_task_id(Rest, N + 7, X bsl N + Acc, F1, F2,
+		       F3, TrUserData);
+d_field_pb_task_id(<<0:1, X:7, Rest/binary>>, N, Acc, _,
+		   F2, F3, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_task(Rest, 0, 0, NewFValue, F2,
+			       F3, TrUserData).
+
+
+d_field_pb_task_num(<<1:1, X:7, Rest/binary>>, N, Acc,
+		    F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_pb_task_num(Rest, N + 7, X bsl N + Acc, F1, F2,
+			F3, TrUserData);
+d_field_pb_task_num(<<0:1, X:7, Rest/binary>>, N, Acc,
+		    F1, _, F3, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_task(Rest, 0, 0, F1, NewFValue,
+			       F3, TrUserData).
+
+
+d_field_pb_task_recive(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_pb_task_recive(Rest, N + 7, X bsl N + Acc, F1,
+			   F2, F3, TrUserData);
+d_field_pb_task_recive(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F1, F2, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_pb_task(Rest, 0, 0, F1, F2,
+			       NewFValue, TrUserData).
+
+
+skip_varint_pb_task(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, F3, TrUserData) ->
+    skip_varint_pb_task(Rest, Z1, Z2, F1, F2, F3,
+			TrUserData);
+skip_varint_pb_task(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		    F1, F2, F3, TrUserData) ->
+    dfp_read_field_def_pb_task(Rest, Z1, Z2, F1, F2, F3,
+			       TrUserData).
+
+
+skip_length_delimited_pb_task(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_pb_task(Rest, N + 7,
+				  X bsl N + Acc, F1, F2, F3, TrUserData);
+skip_length_delimited_pb_task(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, F3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_pb_task(Rest2, 0, 0, F1, F2, F3,
+			       TrUserData).
+
+
+skip_32_pb_task(<<_:32, Rest/binary>>, Z1, Z2, F1, F2,
+		F3, TrUserData) ->
+    dfp_read_field_def_pb_task(Rest, Z1, Z2, F1, F2, F3,
+			       TrUserData).
+
+
+skip_64_pb_task(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
+		F3, TrUserData) ->
+    dfp_read_field_def_pb_task(Rest, Z1, Z2, F1, F2, F3,
+			       TrUserData).
+
+
 d_msg_rsp_player_zhuang(Bin, TrUserData) ->
     dfp_read_field_def_rsp_player_zhuang(Bin, 0, 0,
 					 id(undefined, TrUserData),
@@ -3326,6 +3884,97 @@ skip_64_rsp_login(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 				 F4, F5, F6, TrUserData).
 
 
+d_msg_req_task_claim(Bin, TrUserData) ->
+    dfp_read_field_def_req_task_claim(Bin, 0, 0,
+				      id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_req_task_claim(<<8, Rest/binary>>,
+				  Z1, Z2, F1, TrUserData) ->
+    d_field_req_task_claim_id(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_req_task_claim(<<>>, 0, 0, F1, _) ->
+    #req_task_claim{id = F1};
+dfp_read_field_def_req_task_claim(Other, Z1, Z2, F1,
+				  TrUserData) ->
+    dg_read_field_def_req_task_claim(Other, Z1, Z2, F1,
+				     TrUserData).
+
+dg_read_field_def_req_task_claim(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_task_claim(Rest, N + 7,
+				     X bsl N + Acc, F1, TrUserData);
+dg_read_field_def_req_task_claim(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_req_task_claim_id(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_req_task_claim(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_req_task_claim(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_req_task_claim(Rest, 0, 0, F1,
+						     TrUserData);
+	    5 -> skip_32_req_task_claim(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_req_task_claim(<<>>, 0, 0, F1, _) ->
+    #req_task_claim{id = F1}.
+
+d_field_req_task_claim_id(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_req_task_claim_id(Rest, N + 7, X bsl N + Acc,
+			      F1, TrUserData);
+d_field_req_task_claim_id(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_req_task_claim(Rest, 0, 0, NewFValue,
+				      TrUserData).
+
+
+skip_varint_req_task_claim(<<1:1, _:7, Rest/binary>>,
+			   Z1, Z2, F1, TrUserData) ->
+    skip_varint_req_task_claim(Rest, Z1, Z2, F1,
+			       TrUserData);
+skip_varint_req_task_claim(<<0:1, _:7, Rest/binary>>,
+			   Z1, Z2, F1, TrUserData) ->
+    dfp_read_field_def_req_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
+skip_length_delimited_req_task_claim(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_task_claim(Rest, N + 7,
+					 X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_req_task_claim(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_task_claim(Rest2, 0, 0, F1,
+				      TrUserData).
+
+
+skip_32_req_task_claim(<<_:32, Rest/binary>>, Z1, Z2,
+		       F1, TrUserData) ->
+    dfp_read_field_def_req_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
+skip_64_req_task_claim(<<_:64, Rest/binary>>, Z1, Z2,
+		       F1, TrUserData) ->
+    dfp_read_field_def_req_task_claim(Rest, Z1, Z2, F1,
+				      TrUserData).
+
+
 d_msg_req_create_room(Bin, TrUserData) ->
     dfp_read_field_def_req_create_room(Bin, 0, 0,
 				       id(undefined, TrUserData),
@@ -3520,6 +4169,65 @@ skip_64_req_create_room(<<_:64, Rest/binary>>, Z1, Z2,
 			F1, F2, F3, F4, F5, TrUserData) ->
     dfp_read_field_def_req_create_room(Rest, Z1, Z2, F1, F2,
 				       F3, F4, F5, TrUserData).
+
+
+d_msg_req_task(Bin, TrUserData) ->
+    dfp_read_field_def_req_task(Bin, 0, 0, TrUserData).
+
+dfp_read_field_def_req_task(<<>>, 0, 0, _) ->
+    #req_task{};
+dfp_read_field_def_req_task(Other, Z1, Z2,
+			    TrUserData) ->
+    dg_read_field_def_req_task(Other, Z1, Z2, TrUserData).
+
+dg_read_field_def_req_task(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_task(Rest, N + 7, X bsl N + Acc,
+			       TrUserData);
+dg_read_field_def_req_task(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+      0 -> skip_varint_req_task(Rest, 0, 0, TrUserData);
+      1 -> skip_64_req_task(Rest, 0, 0, TrUserData);
+      2 ->
+	  skip_length_delimited_req_task(Rest, 0, 0, TrUserData);
+      5 -> skip_32_req_task(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_req_task(<<>>, 0, 0, _) ->
+    #req_task{}.
+
+skip_varint_req_task(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     TrUserData) ->
+    skip_varint_req_task(Rest, Z1, Z2, TrUserData);
+skip_varint_req_task(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     TrUserData) ->
+    dfp_read_field_def_req_task(Rest, Z1, Z2, TrUserData).
+
+
+skip_length_delimited_req_task(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_task(Rest, N + 7,
+				   X bsl N + Acc, TrUserData);
+skip_length_delimited_req_task(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_task(Rest2, 0, 0, TrUserData).
+
+
+skip_32_req_task(<<_:32, Rest/binary>>, Z1, Z2,
+		 TrUserData) ->
+    dfp_read_field_def_req_task(Rest, Z1, Z2, TrUserData).
+
+
+skip_64_req_task(<<_:64, Rest/binary>>, Z1, Z2,
+		 TrUserData) ->
+    dfp_read_field_def_req_task(Rest, Z1, Z2, TrUserData).
 
 
 d_msg_rsp_player_ready(Bin, TrUserData) ->
@@ -4114,6 +4822,97 @@ skip_64_rsp_chat(<<_:64, Rest/binary>>, Z1, Z2, F1,
 				TrUserData).
 
 
+d_msg_rsp_task(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_task(Bin, 0, 0,
+				id([], TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_task(<<10, Rest/binary>>, Z1, Z2,
+			    F1, TrUserData) ->
+    d_field_rsp_task_tasks(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_rsp_task(<<>>, 0, 0, F1,
+			    TrUserData) ->
+    #rsp_task{tasks = lists_reverse(F1, TrUserData)};
+dfp_read_field_def_rsp_task(Other, Z1, Z2, F1,
+			    TrUserData) ->
+    dg_read_field_def_rsp_task(Other, Z1, Z2, F1,
+			       TrUserData).
+
+dg_read_field_def_rsp_task(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_task(Rest, N + 7, X bsl N + Acc,
+			       F1, TrUserData);
+dg_read_field_def_rsp_task(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_rsp_task_tasks(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_rsp_task(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_task(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_task(Rest, 0, 0, F1,
+					       TrUserData);
+	    5 -> skip_32_rsp_task(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_task(<<>>, 0, 0, F1,
+			   TrUserData) ->
+    #rsp_task{tasks = lists_reverse(F1, TrUserData)}.
+
+d_field_rsp_task_tasks(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_task_tasks(Rest, N + 7, X bsl N + Acc, F1,
+			   TrUserData);
+d_field_rsp_task_tasks(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F1, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Bs:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = id(d_msg_pb_task(Bs, TrUserData),
+		   TrUserData),
+    dfp_read_field_def_rsp_task(Rest2, 0, 0,
+				cons(NewFValue, F1, TrUserData), TrUserData).
+
+
+skip_varint_rsp_task(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    skip_varint_rsp_task(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_rsp_task(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    dfp_read_field_def_rsp_task(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_length_delimited_rsp_task(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_task(Rest, N + 7,
+				   X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_rsp_task(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_task(Rest2, 0, 0, F1,
+				TrUserData).
+
+
+skip_32_rsp_task(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_task(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_64_rsp_task(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_task(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
 d_msg_req_score(Bin, TrUserData) ->
     dfp_read_field_def_req_score(Bin, 0, 0,
 				 id(undefined, TrUserData), TrUserData).
@@ -4285,6 +5084,210 @@ skip_64_req_leave(<<_:64, Rest/binary>>, Z1, Z2, F1,
 		  TrUserData) ->
     dfp_read_field_def_req_leave(Rest, Z1, Z2, F1,
 				 TrUserData).
+
+
+d_msg_rsp_content(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_content(Bin, 0, 0,
+				   id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_content(<<8, Rest/binary>>, Z1,
+			       Z2, F1, TrUserData) ->
+    d_field_rsp_content_status(Rest, Z1, Z2, F1,
+			       TrUserData);
+dfp_read_field_def_rsp_content(<<>>, 0, 0, F1, _) ->
+    #rsp_content{status = F1};
+dfp_read_field_def_rsp_content(Other, Z1, Z2, F1,
+			       TrUserData) ->
+    dg_read_field_def_rsp_content(Other, Z1, Z2, F1,
+				  TrUserData).
+
+dg_read_field_def_rsp_content(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_content(Rest, N + 7,
+				  X bsl N + Acc, F1, TrUserData);
+dg_read_field_def_rsp_content(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_rsp_content_status(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_rsp_content(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_content(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_content(Rest, 0, 0, F1,
+						  TrUserData);
+	    5 -> skip_32_rsp_content(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_content(<<>>, 0, 0, F1, _) ->
+    #rsp_content{status = F1}.
+
+d_field_rsp_content_status(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_content_status(Rest, N + 7, X bsl N + Acc,
+			       F1, TrUserData);
+d_field_rsp_content_status(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_content(Rest, 0, 0, NewFValue,
+				   TrUserData).
+
+
+skip_varint_rsp_content(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, TrUserData) ->
+    skip_varint_rsp_content(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_rsp_content(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, TrUserData) ->
+    dfp_read_field_def_rsp_content(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
+skip_length_delimited_rsp_content(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_content(Rest, N + 7,
+				      X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_rsp_content(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_content(Rest2, 0, 0, F1,
+				   TrUserData).
+
+
+skip_32_rsp_content(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		    TrUserData) ->
+    dfp_read_field_def_rsp_content(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
+skip_64_rsp_content(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		    TrUserData) ->
+    dfp_read_field_def_rsp_content(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
+d_msg_req_content(Bin, TrUserData) ->
+    dfp_read_field_def_req_content(Bin, 0, 0,
+				   id(undefined, TrUserData),
+				   id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_req_content(<<10, Rest/binary>>, Z1,
+			       Z2, F1, F2, TrUserData) ->
+    d_field_req_content_weixin(Rest, Z1, Z2, F1, F2,
+			       TrUserData);
+dfp_read_field_def_req_content(<<18, Rest/binary>>, Z1,
+			       Z2, F1, F2, TrUserData) ->
+    d_field_req_content_text(Rest, Z1, Z2, F1, F2,
+			     TrUserData);
+dfp_read_field_def_req_content(<<>>, 0, 0, F1, F2, _) ->
+    #req_content{weixin = F1, text = F2};
+dfp_read_field_def_req_content(Other, Z1, Z2, F1, F2,
+			       TrUserData) ->
+    dg_read_field_def_req_content(Other, Z1, Z2, F1, F2,
+				  TrUserData).
+
+dg_read_field_def_req_content(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_content(Rest, N + 7,
+				  X bsl N + Acc, F1, F2, TrUserData);
+dg_read_field_def_req_content(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, F2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_req_content_weixin(Rest, 0, 0, F1, F2,
+				     TrUserData);
+      18 ->
+	  d_field_req_content_text(Rest, 0, 0, F1, F2,
+				   TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_req_content(Rest, 0, 0, F1, F2, TrUserData);
+	    1 ->
+		skip_64_req_content(Rest, 0, 0, F1, F2, TrUserData);
+	    2 ->
+		skip_length_delimited_req_content(Rest, 0, 0, F1, F2,
+						  TrUserData);
+	    5 -> skip_32_req_content(Rest, 0, 0, F1, F2, TrUserData)
+	  end
+    end;
+dg_read_field_def_req_content(<<>>, 0, 0, F1, F2, _) ->
+    #req_content{weixin = F1, text = F2}.
+
+d_field_req_content_weixin(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_req_content_weixin(Rest, N + 7, X bsl N + Acc,
+			       F1, F2, TrUserData);
+d_field_req_content_weixin(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, _, F2, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_req_content(Rest2, 0, 0, NewFValue,
+				   F2, TrUserData).
+
+
+d_field_req_content_text(<<1:1, X:7, Rest/binary>>, N,
+			 Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_req_content_text(Rest, N + 7, X bsl N + Acc, F1,
+			     F2, TrUserData);
+d_field_req_content_text(<<0:1, X:7, Rest/binary>>, N,
+			 Acc, F1, _, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Utf8:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = unicode:characters_to_list(Utf8, unicode),
+    dfp_read_field_def_req_content(Rest2, 0, 0, F1,
+				   NewFValue, TrUserData).
+
+
+skip_varint_req_content(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, F2, TrUserData) ->
+    skip_varint_req_content(Rest, Z1, Z2, F1, F2,
+			    TrUserData);
+skip_varint_req_content(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, F2, TrUserData) ->
+    dfp_read_field_def_req_content(Rest, Z1, Z2, F1, F2,
+				   TrUserData).
+
+
+skip_length_delimited_req_content(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_content(Rest, N + 7,
+				      X bsl N + Acc, F1, F2, TrUserData);
+skip_length_delimited_req_content(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, F2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_content(Rest2, 0, 0, F1, F2,
+				   TrUserData).
+
+
+skip_32_req_content(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		    F2, TrUserData) ->
+    dfp_read_field_def_req_content(Rest, Z1, Z2, F1, F2,
+				   TrUserData).
+
+
+skip_64_req_content(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		    F2, TrUserData) ->
+    dfp_read_field_def_req_content(Rest, Z1, Z2, F1, F2,
+				   TrUserData).
 
 
 d_msg_req_chat(Bin, TrUserData) ->
@@ -4576,6 +5579,8 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_req_login(Prev, New, TrUserData);
       #rsp_create_room{} ->
 	  merge_msg_rsp_create_room(Prev, New, TrUserData);
+      #rsp_pay{} -> merge_msg_rsp_pay(Prev, New, TrUserData);
+      #req_pay{} -> merge_msg_req_pay(Prev, New, TrUserData);
       #req_ready{} ->
 	  merge_msg_req_ready(Prev, New, TrUserData);
       #req_zhuang{} ->
@@ -4591,6 +5596,9 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_pb_player(Prev, New, TrUserData);
       #rsp_join{} ->
 	  merge_msg_rsp_join(Prev, New, TrUserData);
+      #rsp_task_claim{} ->
+	  merge_msg_rsp_task_claim(Prev, New, TrUserData);
+      #pb_task{} -> merge_msg_pb_task(Prev, New, TrUserData);
       #rsp_player_zhuang{} ->
 	  merge_msg_rsp_player_zhuang(Prev, New, TrUserData);
       #rsp_zhuang{} ->
@@ -4609,8 +5617,12 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_rsp_new_player(Prev, New, TrUserData);
       #rsp_login{} ->
 	  merge_msg_rsp_login(Prev, New, TrUserData);
+      #req_task_claim{} ->
+	  merge_msg_req_task_claim(Prev, New, TrUserData);
       #req_create_room{} ->
 	  merge_msg_req_create_room(Prev, New, TrUserData);
+      #req_task{} ->
+	  merge_msg_req_task(Prev, New, TrUserData);
       #rsp_player_ready{} ->
 	  merge_msg_rsp_player_ready(Prev, New, TrUserData);
       #rsp_ready{} ->
@@ -4623,10 +5635,16 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_req_start(Prev, New, TrUserData);
       #rsp_chat{} ->
 	  merge_msg_rsp_chat(Prev, New, TrUserData);
+      #rsp_task{} ->
+	  merge_msg_rsp_task(Prev, New, TrUserData);
       #req_score{} ->
 	  merge_msg_req_score(Prev, New, TrUserData);
       #req_leave{} ->
 	  merge_msg_req_leave(Prev, New, TrUserData);
+      #rsp_content{} ->
+	  merge_msg_rsp_content(Prev, New, TrUserData);
+      #req_content{} ->
+	  merge_msg_req_content(Prev, New, TrUserData);
       #req_chat{} ->
 	  merge_msg_req_chat(Prev, New, TrUserData);
       #rsp_pub{} -> merge_msg_rsp_pub(Prev, New, TrUserData);
@@ -4672,6 +5690,18 @@ merge_msg_rsp_create_room(#rsp_create_room{room_id =
 			    true -> NFcoins
 			 end}.
 
+merge_msg_rsp_pay(#rsp_pay{coins = PFcoins},
+		  #rsp_pay{status = NFstatus, coins = NFcoins}, _) ->
+    #rsp_pay{status = NFstatus,
+	     coins =
+		 if NFcoins =:= undefined -> PFcoins;
+		    true -> NFcoins
+		 end}.
+
+merge_msg_req_pay(#req_pay{}, #req_pay{rmb = NFrmb},
+		  _) ->
+    #req_pay{rmb = NFrmb}.
+
 merge_msg_req_ready(#req_ready{},
 		    #req_ready{type = NFtype}, _) ->
     #req_ready{type = NFtype}.
@@ -4707,7 +5737,7 @@ merge_msg_pb_room_info(#pb_room_info{},
 
 merge_msg_pb_player(#pb_player{name = PFname,
 			       coins = PFcoins, logo = PFlogo, owner = PFowner,
-			       pai = PFpai, delta = PFdelta},
+			       index = PFindex, pai = PFpai, delta = PFdelta},
 		    #pb_player{name = NFname, uid = NFuid, coins = NFcoins,
 			       logo = NFlogo, owner = NFowner, index = NFindex,
 			       pai = NFpai, delta = NFdelta},
@@ -4729,7 +5759,10 @@ merge_msg_pb_player(#pb_player{name = PFname,
 		   if NFowner =:= undefined -> PFowner;
 		      true -> NFowner
 		   end,
-	       index = NFindex,
+	       index =
+		   if NFindex =:= undefined -> PFindex;
+		      true -> NFindex
+		   end,
 	       pai = 'erlang_++'(PFpai, NFpai, TrUserData),
 	       delta =
 		   if NFdelta =:= undefined -> PFdelta;
@@ -4750,6 +5783,15 @@ merge_msg_rsp_join(#rsp_join{players = PFplayers,
 		     PFroom_info == undefined -> NFroom_info;
 		     NFroom_info == undefined -> PFroom_info
 		  end}.
+
+merge_msg_rsp_task_claim(#rsp_task_claim{},
+			 #rsp_task_claim{status = NFstatus}, _) ->
+    #rsp_task_claim{status = NFstatus}.
+
+merge_msg_pb_task(#pb_task{},
+		  #pb_task{id = NFid, num = NFnum, recive = NFrecive},
+		  _) ->
+    #pb_task{id = NFid, num = NFnum, recive = NFrecive}.
 
 merge_msg_rsp_player_zhuang(#rsp_player_zhuang{},
 			    #rsp_player_zhuang{uid = NFuid, base = NFbase},
@@ -4823,6 +5865,10 @@ merge_msg_rsp_login(#rsp_login{coins = PFcoins,
 		      true -> NFlogo
 		   end}.
 
+merge_msg_req_task_claim(#req_task_claim{},
+			 #req_task_claim{id = NFid}, _) ->
+    #req_task_claim{id = NFid}.
+
 merge_msg_req_create_room(#req_create_room{},
 			  #req_create_room{round = NFround, pay = NFpay,
 					   banker = NFbanker,
@@ -4830,6 +5876,8 @@ merge_msg_req_create_room(#req_create_room{},
 			  _) ->
     #req_create_room{round = NFround, pay = NFpay,
 		     banker = NFbanker, special = NFspecial, type = NFtype}.
+
+merge_msg_req_task(_Prev, New, _TrUserData) -> New.
 
 merge_msg_rsp_player_ready(#rsp_player_ready{},
 			   #rsp_player_ready{uid = NFuid, type = NFtype}, _) ->
@@ -4865,6 +5913,11 @@ merge_msg_rsp_chat(#rsp_chat{},
 		   #rsp_chat{status = NFstatus}, _) ->
     #rsp_chat{status = NFstatus}.
 
+merge_msg_rsp_task(#rsp_task{tasks = PFtasks},
+		   #rsp_task{tasks = NFtasks}, TrUserData) ->
+    #rsp_task{tasks =
+		  'erlang_++'(PFtasks, NFtasks, TrUserData)}.
+
 merge_msg_req_score(#req_score{},
 		    #req_score{score = NFscore}, _) ->
     #req_score{score = NFscore}.
@@ -4872,6 +5925,14 @@ merge_msg_req_score(#req_score{},
 merge_msg_req_leave(#req_leave{},
 		    #req_leave{uid = NFuid}, _) ->
     #req_leave{uid = NFuid}.
+
+merge_msg_rsp_content(#rsp_content{},
+		      #rsp_content{status = NFstatus}, _) ->
+    #rsp_content{status = NFstatus}.
+
+merge_msg_req_content(#req_content{},
+		      #req_content{weixin = NFweixin, text = NFtext}, _) ->
+    #req_content{weixin = NFweixin, text = NFtext}.
 
 merge_msg_req_chat(#req_chat{msg = PFmsg,
 			     voice = PFvoice},
@@ -4909,6 +5970,8 @@ verify_msg(Msg, Opts) ->
       #rsp_create_room{} ->
 	  v_msg_rsp_create_room(Msg, [rsp_create_room],
 				TrUserData);
+      #rsp_pay{} -> v_msg_rsp_pay(Msg, [rsp_pay], TrUserData);
+      #req_pay{} -> v_msg_req_pay(Msg, [req_pay], TrUserData);
       #req_ready{} ->
 	  v_msg_req_ready(Msg, [req_ready], TrUserData);
       #req_zhuang{} ->
@@ -4924,6 +5987,9 @@ verify_msg(Msg, Opts) ->
 	  v_msg_pb_player(Msg, [pb_player], TrUserData);
       #rsp_join{} ->
 	  v_msg_rsp_join(Msg, [rsp_join], TrUserData);
+      #rsp_task_claim{} ->
+	  v_msg_rsp_task_claim(Msg, [rsp_task_claim], TrUserData);
+      #pb_task{} -> v_msg_pb_task(Msg, [pb_task], TrUserData);
       #rsp_player_zhuang{} ->
 	  v_msg_rsp_player_zhuang(Msg, [rsp_player_zhuang],
 				  TrUserData);
@@ -4945,9 +6011,13 @@ verify_msg(Msg, Opts) ->
 	  v_msg_rsp_new_player(Msg, [rsp_new_player], TrUserData);
       #rsp_login{} ->
 	  v_msg_rsp_login(Msg, [rsp_login], TrUserData);
+      #req_task_claim{} ->
+	  v_msg_req_task_claim(Msg, [req_task_claim], TrUserData);
       #req_create_room{} ->
 	  v_msg_req_create_room(Msg, [req_create_room],
 				TrUserData);
+      #req_task{} ->
+	  v_msg_req_task(Msg, [req_task], TrUserData);
       #rsp_player_ready{} ->
 	  v_msg_rsp_player_ready(Msg, [rsp_player_ready],
 				 TrUserData);
@@ -4962,10 +6032,16 @@ verify_msg(Msg, Opts) ->
 	  v_msg_req_start(Msg, [req_start], TrUserData);
       #rsp_chat{} ->
 	  v_msg_rsp_chat(Msg, [rsp_chat], TrUserData);
+      #rsp_task{} ->
+	  v_msg_rsp_task(Msg, [rsp_task], TrUserData);
       #req_score{} ->
 	  v_msg_req_score(Msg, [req_score], TrUserData);
       #req_leave{} ->
 	  v_msg_req_leave(Msg, [req_leave], TrUserData);
+      #rsp_content{} ->
+	  v_msg_rsp_content(Msg, [rsp_content], TrUserData);
+      #req_content{} ->
+	  v_msg_req_content(Msg, [req_content], TrUserData);
       #req_chat{} ->
 	  v_msg_req_chat(Msg, [req_chat], TrUserData);
       #rsp_pub{} -> v_msg_rsp_pub(Msg, [rsp_pub], TrUserData);
@@ -5005,6 +6081,19 @@ v_msg_rsp_create_room(#rsp_create_room{status = F1,
        true -> v_type_int32(F3, [coins | Path])
     end,
     ok.
+
+-dialyzer({nowarn_function,v_msg_rsp_pay/3}).
+v_msg_rsp_pay(#rsp_pay{status = F1, coins = F2}, Path,
+	      _) ->
+    v_type_int32(F1, [status | Path]),
+    if F2 == undefined -> ok;
+       true -> v_type_int32(F2, [coins | Path])
+    end,
+    ok.
+
+-dialyzer({nowarn_function,v_msg_req_pay/3}).
+v_msg_req_pay(#req_pay{rmb = F1}, Path, _) ->
+    v_type_int32(F1, [rmb | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_req_ready/3}).
 v_msg_req_ready(#req_ready{type = F1}, Path, _) ->
@@ -5068,7 +6157,9 @@ v_msg_pb_player(#pb_player{name = F1, uid = F2,
     if F5 == undefined -> ok;
        true -> v_type_int32(F5, [owner | Path])
     end,
-    v_type_int32(F6, [index | Path]),
+    if F6 == undefined -> ok;
+       true -> v_type_int32(F6, [index | Path])
+    end,
     if is_list(F7) ->
 	   _ = [v_msg_pb_unit(Elem, [pai | Path], TrUserData)
 		|| Elem <- F7],
@@ -5102,6 +6193,21 @@ v_msg_rsp_join(#rsp_join{status = F1, players = F2,
 	   v_msg_pb_room_info(F3, [room_info | Path], TrUserData)
     end,
     ok.
+
+-dialyzer({nowarn_function,v_msg_rsp_task_claim/3}).
+v_msg_rsp_task_claim(#rsp_task_claim{status = F1}, Path,
+		     _) ->
+    v_type_int32(F1, [status | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_pb_task/3}).
+v_msg_pb_task(#pb_task{id = F1, num = F2, recive = F3},
+	      Path, _) ->
+    v_type_int32(F1, [id | Path]),
+    v_type_int32(F2, [num | Path]),
+    v_type_int32(F3, [recive | Path]),
+    ok;
+v_msg_pb_task(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, pb_task}, X, Path).
 
 -dialyzer({nowarn_function,v_msg_rsp_player_zhuang/3}).
 v_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1,
@@ -5172,6 +6278,11 @@ v_msg_rsp_login(#rsp_login{status = F1, coins = F2,
     end,
     ok.
 
+-dialyzer({nowarn_function,v_msg_req_task_claim/3}).
+v_msg_req_task_claim(#req_task_claim{id = F1}, Path,
+		     _) ->
+    v_type_int32(F1, [id | Path]), ok.
+
 -dialyzer({nowarn_function,v_msg_req_create_room/3}).
 v_msg_req_create_room(#req_create_room{round = F1,
 				       pay = F2, banker = F3, special = F4,
@@ -5183,6 +6294,9 @@ v_msg_req_create_room(#req_create_room{round = F1,
     v_type_int32(F4, [special | Path]),
     v_type_int32(F5, [type | Path]),
     ok.
+
+-dialyzer({nowarn_function,v_msg_req_task/3}).
+v_msg_req_task(#req_task{}, _Path, _) -> ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_player_ready/3}).
 v_msg_rsp_player_ready(#rsp_player_ready{uid = F1,
@@ -5229,6 +6343,19 @@ v_msg_req_start(#req_start{}, _Path, _) -> ok.
 v_msg_rsp_chat(#rsp_chat{status = F1}, Path, _) ->
     v_type_int32(F1, [status | Path]), ok.
 
+-dialyzer({nowarn_function,v_msg_rsp_task/3}).
+v_msg_rsp_task(#rsp_task{tasks = F1}, Path,
+	       TrUserData) ->
+    if is_list(F1) ->
+	   _ = [v_msg_pb_task(Elem, [tasks | Path], TrUserData)
+		|| Elem <- F1],
+	   ok;
+       true ->
+	   mk_type_error({invalid_list_of, {msg, pb_task}}, F1,
+			 Path)
+    end,
+    ok.
+
 -dialyzer({nowarn_function,v_msg_req_score/3}).
 v_msg_req_score(#req_score{score = F1}, Path, _) ->
     v_type_int32(F1, [score | Path]), ok.
@@ -5236,6 +6363,17 @@ v_msg_req_score(#req_score{score = F1}, Path, _) ->
 -dialyzer({nowarn_function,v_msg_req_leave/3}).
 v_msg_req_leave(#req_leave{uid = F1}, Path, _) ->
     v_type_int32(F1, [uid | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_rsp_content/3}).
+v_msg_rsp_content(#rsp_content{status = F1}, Path, _) ->
+    v_type_int32(F1, [status | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_req_content/3}).
+v_msg_req_content(#req_content{weixin = F1, text = F2},
+		  Path, _) ->
+    v_type_string(F1, [weixin | Path]),
+    v_type_string(F2, [text | Path]),
+    ok.
 
 -dialyzer({nowarn_function,v_msg_req_chat/3}).
 v_msg_req_chat(#req_chat{msg = F1, voice = F2}, Path,
@@ -5341,6 +6479,14 @@ get_msg_defs() ->
 	      occurrence = optional, opts = []},
        #field{name = coins, fnum = 3, rnum = 4, type = int32,
 	      occurrence = optional, opts = []}]},
+     {{msg, rsp_pay},
+      [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = coins, fnum = 2, rnum = 3, type = int32,
+	      occurrence = optional, opts = []}]},
+     {{msg, req_pay},
+      [#field{name = rmb, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, req_ready},
       [#field{name = type, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
@@ -5385,7 +6531,7 @@ get_msg_defs() ->
        #field{name = owner, fnum = 5, rnum = 6, type = int32,
 	      occurrence = optional, opts = []},
        #field{name = index, fnum = 6, rnum = 7, type = int32,
-	      occurrence = required, opts = []},
+	      occurrence = optional, opts = []},
        #field{name = pai, fnum = 7, rnum = 8,
 	      type = {msg, pb_unit}, occurrence = repeated,
 	      opts = []},
@@ -5400,6 +6546,16 @@ get_msg_defs() ->
        #field{name = room_info, fnum = 3, rnum = 4,
 	      type = {msg, pb_room_info}, occurrence = optional,
 	      opts = []}]},
+     {{msg, rsp_task_claim},
+      [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
+     {{msg, pb_task},
+      [#field{name = id, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = num, fnum = 2, rnum = 3, type = int32,
+	      occurrence = required, opts = []},
+       #field{name = recive, fnum = 3, rnum = 4, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, rsp_player_zhuang},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []},
@@ -5446,6 +6602,9 @@ get_msg_defs() ->
 	      occurrence = optional, opts = []},
        #field{name = logo, fnum = 6, rnum = 7, type = string,
 	      occurrence = optional, opts = []}]},
+     {{msg, req_task_claim},
+      [#field{name = id, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, req_create_room},
       [#field{name = round, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []},
@@ -5457,6 +6616,7 @@ get_msg_defs() ->
 	      occurrence = required, opts = []},
        #field{name = type, fnum = 5, rnum = 6, type = int32,
 	      occurrence = required, opts = []}]},
+     {{msg, req_task}, []},
      {{msg, rsp_player_ready},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []},
@@ -5480,11 +6640,23 @@ get_msg_defs() ->
      {{msg, rsp_chat},
       [#field{name = status, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
+     {{msg, rsp_task},
+      [#field{name = tasks, fnum = 1, rnum = 2,
+	      type = {msg, pb_task}, occurrence = repeated,
+	      opts = []}]},
      {{msg, req_score},
       [#field{name = score, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
      {{msg, req_leave},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
+     {{msg, rsp_content},
+      [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
+     {{msg, req_content},
+      [#field{name = weixin, fnum = 1, rnum = 2,
+	      type = string, occurrence = required, opts = []},
+       #field{name = text, fnum = 2, rnum = 3, type = string,
 	      occurrence = required, opts = []}]},
      {{msg, req_chat},
       [#field{name = msg, fnum = 1, rnum = 2, type = string,
@@ -5500,15 +6672,17 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    [req_join, req_login, rsp_create_room, req_ready,
-     req_zhuang, pb_unit, rsp_game_start, rsp_start,
-     pb_room_info, pb_player, rsp_join, rsp_player_zhuang,
-     rsp_zhuang, rsp_player_leave, rsp_leave,
-     rsp_player_score, rsp_score, rsp_zhuang_end,
-     rsp_new_player, rsp_login, req_create_room,
+    [req_join, req_login, rsp_create_room, rsp_pay, req_pay,
+     req_ready, req_zhuang, pb_unit, rsp_game_start,
+     rsp_start, pb_room_info, pb_player, rsp_join,
+     rsp_task_claim, pb_task, rsp_player_zhuang, rsp_zhuang,
+     rsp_player_leave, rsp_leave, rsp_player_score,
+     rsp_score, rsp_zhuang_end, rsp_new_player, rsp_login,
+     req_task_claim, req_create_room, req_task,
      rsp_player_ready, rsp_ready, rsp_player_chat,
-     rsp_result, req_start, rsp_chat, req_score, req_leave,
-     req_chat, rsp_pub, req_pub].
+     rsp_result, req_start, rsp_chat, rsp_task, req_score,
+     req_leave, rsp_content, req_content, req_chat, rsp_pub,
+     req_pub].
 
 
 get_enum_names() -> [].
@@ -5543,6 +6717,14 @@ find_msg_def(rsp_create_room) ->
 	    occurrence = optional, opts = []},
      #field{name = coins, fnum = 3, rnum = 4, type = int32,
 	    occurrence = optional, opts = []}];
+find_msg_def(rsp_pay) ->
+    [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = coins, fnum = 2, rnum = 3, type = int32,
+	    occurrence = optional, opts = []}];
+find_msg_def(req_pay) ->
+    [#field{name = rmb, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(req_ready) ->
     [#field{name = type, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
@@ -5587,7 +6769,7 @@ find_msg_def(pb_player) ->
      #field{name = owner, fnum = 5, rnum = 6, type = int32,
 	    occurrence = optional, opts = []},
      #field{name = index, fnum = 6, rnum = 7, type = int32,
-	    occurrence = required, opts = []},
+	    occurrence = optional, opts = []},
      #field{name = pai, fnum = 7, rnum = 8,
 	    type = {msg, pb_unit}, occurrence = repeated,
 	    opts = []},
@@ -5602,6 +6784,16 @@ find_msg_def(rsp_join) ->
      #field{name = room_info, fnum = 3, rnum = 4,
 	    type = {msg, pb_room_info}, occurrence = optional,
 	    opts = []}];
+find_msg_def(rsp_task_claim) ->
+    [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
+find_msg_def(pb_task) ->
+    [#field{name = id, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = num, fnum = 2, rnum = 3, type = int32,
+	    occurrence = required, opts = []},
+     #field{name = recive, fnum = 3, rnum = 4, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(rsp_player_zhuang) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []},
@@ -5648,6 +6840,9 @@ find_msg_def(rsp_login) ->
 	    occurrence = optional, opts = []},
      #field{name = logo, fnum = 6, rnum = 7, type = string,
 	    occurrence = optional, opts = []}];
+find_msg_def(req_task_claim) ->
+    [#field{name = id, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(req_create_room) ->
     [#field{name = round, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []},
@@ -5659,6 +6854,7 @@ find_msg_def(req_create_room) ->
 	    occurrence = required, opts = []},
      #field{name = type, fnum = 5, rnum = 6, type = int32,
 	    occurrence = required, opts = []}];
+find_msg_def(req_task) -> [];
 find_msg_def(rsp_player_ready) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []},
@@ -5682,11 +6878,23 @@ find_msg_def(req_start) -> [];
 find_msg_def(rsp_chat) ->
     [#field{name = status, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
+find_msg_def(rsp_task) ->
+    [#field{name = tasks, fnum = 1, rnum = 2,
+	    type = {msg, pb_task}, occurrence = repeated,
+	    opts = []}];
 find_msg_def(req_score) ->
     [#field{name = score, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
 find_msg_def(req_leave) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
+find_msg_def(rsp_content) ->
+    [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
+find_msg_def(req_content) ->
+    [#field{name = weixin, fnum = 1, rnum = 2,
+	    type = string, occurrence = required, opts = []},
+     #field{name = text, fnum = 2, rnum = 3, type = string,
 	    occurrence = required, opts = []}];
 find_msg_def(req_chat) ->
     [#field{name = msg, fnum = 1, rnum = 2, type = string,
