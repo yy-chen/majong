@@ -64,7 +64,7 @@ get_cards(Uids) ->
   Len = length(Uids),
   Map = lists:foldl(fun(N, M) ->
     Uid = lists:nth(N, Uids),
-    Cards = lists:sublist(L, N, N + 4),
+    Cards = lists:sublist(L, N * 5 - 4, N * 5),
     Cards1 = [trans(X) || X <- Cards],
     M#{Uid => Cards1} end, #{}, lists:seq(1, Len)),
   Map.
