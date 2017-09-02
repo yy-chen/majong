@@ -68,11 +68,13 @@ start(Uid) ->
     State =/= ?Ready -> {error, no_ready};
     true ->
       #{banker := BankerType} = RoomInfo,
+      down(Room#{ready => []}),
       case room_war:choose_banker(Players, BankerType) of
         undefined -> multi_cast(Players, {mod_room, game_start, []});
         Uid -> multi_cast(Players, {mod_room, game_start, [Uid]})
       end
   end.
+
 
 chat(Uid, Url, Msg) ->
   #{players := Players} = load(),

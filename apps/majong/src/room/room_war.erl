@@ -14,7 +14,8 @@
 -export([
   choose_banker/2,
   zhuang/2,
-  score/2
+  score/2,
+  show/1
 ]).
 
 choose_banker(Players, BankerType) ->
@@ -119,6 +120,10 @@ score(Uid, Score) ->
     N == 2 -> notify_cards(C);
     true -> ok
   end.
+
+show(Uid) ->
+  #{players := Uids} = load(),
+  multi_cast(Uids, {mod_room, notify_show, [Uid]}).
 
 trans(Num) ->
   Type = trunc(Num / 13) + 1,

@@ -54,6 +54,13 @@
         }).
 -endif.
 
+-ifndef('RSP_SHOW_PB_H').
+-define('RSP_SHOW_PB_H', true).
+-record(rsp_show,
+        {status                         % = 1, int32
+        }).
+-endif.
+
 -ifndef('REQ_ZHUANG_PB_H').
 -define('REQ_ZHUANG_PB_H', true).
 -record(req_zhuang,
@@ -132,6 +139,13 @@
         {id,                            % = 1, int32
          num,                           % = 2, int32
          recive                         % = 3, int32
+        }).
+-endif.
+
+-ifndef('REQ_SHOW_PB_H').
+-define('REQ_SHOW_PB_H', true).
+-record(req_show,
+        {
         }).
 -endif.
 
@@ -244,6 +258,13 @@
 -define('RSP_READY_PB_H', true).
 -record(rsp_ready,
         {status                         % = 1, sint32
+        }).
+-endif.
+
+-ifndef('NOTIFY_SHOW_PB_H').
+-define('NOTIFY_SHOW_PB_H', true).
+-record(notify_show,
+        {uid                            % = 1, int32
         }).
 -endif.
 

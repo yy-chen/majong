@@ -44,6 +44,7 @@ encode_msg(Msg, Opts) ->
       #rsp_pay{} -> e_msg_rsp_pay(Msg, TrUserData);
       #req_pay{} -> e_msg_req_pay(Msg, TrUserData);
       #req_ready{} -> e_msg_req_ready(Msg, TrUserData);
+      #rsp_show{} -> e_msg_rsp_show(Msg, TrUserData);
       #req_zhuang{} -> e_msg_req_zhuang(Msg, TrUserData);
       #pb_unit{} -> e_msg_pb_unit(Msg, TrUserData);
       #rsp_game_start{} ->
@@ -55,6 +56,7 @@ encode_msg(Msg, Opts) ->
       #rsp_task_claim{} ->
 	  e_msg_rsp_task_claim(Msg, TrUserData);
       #pb_task{} -> e_msg_pb_task(Msg, TrUserData);
+      #req_show{} -> e_msg_req_show(Msg, TrUserData);
       #rsp_player_zhuang{} ->
 	  e_msg_rsp_player_zhuang(Msg, TrUserData);
       #rsp_zhuang{} -> e_msg_rsp_zhuang(Msg, TrUserData);
@@ -77,6 +79,7 @@ encode_msg(Msg, Opts) ->
       #rsp_player_ready{} ->
 	  e_msg_rsp_player_ready(Msg, TrUserData);
       #rsp_ready{} -> e_msg_rsp_ready(Msg, TrUserData);
+      #notify_show{} -> e_msg_notify_show(Msg, TrUserData);
       #rsp_player_chat{} ->
 	  e_msg_rsp_player_chat(Msg, TrUserData);
       #rsp_result{} -> e_msg_rsp_result(Msg, TrUserData);
@@ -193,6 +196,17 @@ e_msg_req_ready(Msg, TrUserData) ->
 
 e_msg_req_ready(#req_ready{type = F1}, Bin,
 		TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_rsp_show(Msg, TrUserData) ->
+    e_msg_rsp_show(Msg, <<>>, TrUserData).
+
+
+e_msg_rsp_show(#rsp_show{status = F1}, Bin,
+	       TrUserData) ->
     begin
       TrF1 = id(F1, TrUserData),
       e_type_int32(TrF1, <<Bin/binary, 8>>)
@@ -402,6 +416,8 @@ e_msg_pb_task(#pb_task{id = F1, num = F2, recive = F3},
       TrF3 = id(F3, TrUserData),
       e_type_int32(TrF3, <<B2/binary, 24>>)
     end.
+
+e_msg_req_show(_Msg, _TrUserData) -> <<>>.
 
 e_msg_rsp_player_zhuang(Msg, TrUserData) ->
     e_msg_rsp_player_zhuang(Msg, <<>>, TrUserData).
@@ -625,6 +641,17 @@ e_msg_rsp_ready(#rsp_ready{status = F1}, Bin,
     begin
       TrF1 = id(F1, TrUserData),
       e_type_sint(TrF1, <<Bin/binary, 8>>)
+    end.
+
+e_msg_notify_show(Msg, TrUserData) ->
+    e_msg_notify_show(Msg, <<>>, TrUserData).
+
+
+e_msg_notify_show(#notify_show{uid = F1}, Bin,
+		  TrUserData) ->
+    begin
+      TrF1 = id(F1, TrUserData),
+      e_type_int32(TrF1, <<Bin/binary, 8>>)
     end.
 
 e_msg_rsp_player_chat(Msg, TrUserData) ->
@@ -882,6 +909,7 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_pay -> d_msg_rsp_pay(Bin, TrUserData);
       req_pay -> d_msg_req_pay(Bin, TrUserData);
       req_ready -> d_msg_req_ready(Bin, TrUserData);
+      rsp_show -> d_msg_rsp_show(Bin, TrUserData);
       req_zhuang -> d_msg_req_zhuang(Bin, TrUserData);
       pb_unit -> d_msg_pb_unit(Bin, TrUserData);
       rsp_game_start -> d_msg_rsp_game_start(Bin, TrUserData);
@@ -891,6 +919,7 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_join -> d_msg_rsp_join(Bin, TrUserData);
       rsp_task_claim -> d_msg_rsp_task_claim(Bin, TrUserData);
       pb_task -> d_msg_pb_task(Bin, TrUserData);
+      req_show -> d_msg_req_show(Bin, TrUserData);
       rsp_player_zhuang ->
 	  d_msg_rsp_player_zhuang(Bin, TrUserData);
       rsp_zhuang -> d_msg_rsp_zhuang(Bin, TrUserData);
@@ -910,6 +939,7 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
       rsp_player_ready ->
 	  d_msg_rsp_player_ready(Bin, TrUserData);
       rsp_ready -> d_msg_rsp_ready(Bin, TrUserData);
+      notify_show -> d_msg_notify_show(Bin, TrUserData);
       rsp_player_chat ->
 	  d_msg_rsp_player_chat(Bin, TrUserData);
       rsp_result -> d_msg_rsp_result(Bin, TrUserData);
@@ -1574,6 +1604,93 @@ skip_64_req_ready(<<_:64, Rest/binary>>, Z1, Z2, F1,
 		  TrUserData) ->
     dfp_read_field_def_req_ready(Rest, Z1, Z2, F1,
 				 TrUserData).
+
+
+d_msg_rsp_show(Bin, TrUserData) ->
+    dfp_read_field_def_rsp_show(Bin, 0, 0,
+				id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_rsp_show(<<8, Rest/binary>>, Z1, Z2,
+			    F1, TrUserData) ->
+    d_field_rsp_show_status(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_rsp_show(<<>>, 0, 0, F1, _) ->
+    #rsp_show{status = F1};
+dfp_read_field_def_rsp_show(Other, Z1, Z2, F1,
+			    TrUserData) ->
+    dg_read_field_def_rsp_show(Other, Z1, Z2, F1,
+			       TrUserData).
+
+dg_read_field_def_rsp_show(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_rsp_show(Rest, N + 7, X bsl N + Acc,
+			       F1, TrUserData);
+dg_read_field_def_rsp_show(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_rsp_show_status(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_rsp_show(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_rsp_show(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_rsp_show(Rest, 0, 0, F1,
+					       TrUserData);
+	    5 -> skip_32_rsp_show(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_rsp_show(<<>>, 0, 0, F1, _) ->
+    #rsp_show{status = F1}.
+
+d_field_rsp_show_status(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_rsp_show_status(Rest, N + 7, X bsl N + Acc, F1,
+			    TrUserData);
+d_field_rsp_show_status(<<0:1, X:7, Rest/binary>>, N,
+			Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_show(Rest, 0, 0, NewFValue,
+				TrUserData).
+
+
+skip_varint_rsp_show(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    skip_varint_rsp_show(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_rsp_show(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F1, TrUserData) ->
+    dfp_read_field_def_rsp_show(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_length_delimited_rsp_show(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_rsp_show(Rest, N + 7,
+				   X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_rsp_show(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_rsp_show(Rest2, 0, 0, F1,
+				TrUserData).
+
+
+skip_32_rsp_show(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_show(Rest, Z1, Z2, F1,
+				TrUserData).
+
+
+skip_64_rsp_show(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		 TrUserData) ->
+    dfp_read_field_def_rsp_show(Rest, Z1, Z2, F1,
+				TrUserData).
 
 
 d_msg_req_zhuang(Bin, TrUserData) ->
@@ -2816,6 +2933,65 @@ skip_64_pb_task(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 		F3, TrUserData) ->
     dfp_read_field_def_pb_task(Rest, Z1, Z2, F1, F2, F3,
 			       TrUserData).
+
+
+d_msg_req_show(Bin, TrUserData) ->
+    dfp_read_field_def_req_show(Bin, 0, 0, TrUserData).
+
+dfp_read_field_def_req_show(<<>>, 0, 0, _) ->
+    #req_show{};
+dfp_read_field_def_req_show(Other, Z1, Z2,
+			    TrUserData) ->
+    dg_read_field_def_req_show(Other, Z1, Z2, TrUserData).
+
+dg_read_field_def_req_show(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_req_show(Rest, N + 7, X bsl N + Acc,
+			       TrUserData);
+dg_read_field_def_req_show(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+      0 -> skip_varint_req_show(Rest, 0, 0, TrUserData);
+      1 -> skip_64_req_show(Rest, 0, 0, TrUserData);
+      2 ->
+	  skip_length_delimited_req_show(Rest, 0, 0, TrUserData);
+      5 -> skip_32_req_show(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_req_show(<<>>, 0, 0, _) ->
+    #req_show{}.
+
+skip_varint_req_show(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     TrUserData) ->
+    skip_varint_req_show(Rest, Z1, Z2, TrUserData);
+skip_varint_req_show(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     TrUserData) ->
+    dfp_read_field_def_req_show(Rest, Z1, Z2, TrUserData).
+
+
+skip_length_delimited_req_show(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_req_show(Rest, N + 7,
+				   X bsl N + Acc, TrUserData);
+skip_length_delimited_req_show(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_req_show(Rest2, 0, 0, TrUserData).
+
+
+skip_32_req_show(<<_:32, Rest/binary>>, Z1, Z2,
+		 TrUserData) ->
+    dfp_read_field_def_req_show(Rest, Z1, Z2, TrUserData).
+
+
+skip_64_req_show(<<_:64, Rest/binary>>, Z1, Z2,
+		 TrUserData) ->
+    dfp_read_field_def_req_show(Rest, Z1, Z2, TrUserData).
 
 
 d_msg_rsp_player_zhuang(Bin, TrUserData) ->
@@ -4439,6 +4615,94 @@ skip_64_rsp_ready(<<_:64, Rest/binary>>, Z1, Z2, F1,
 				 TrUserData).
 
 
+d_msg_notify_show(Bin, TrUserData) ->
+    dfp_read_field_def_notify_show(Bin, 0, 0,
+				   id(undefined, TrUserData), TrUserData).
+
+dfp_read_field_def_notify_show(<<8, Rest/binary>>, Z1,
+			       Z2, F1, TrUserData) ->
+    d_field_notify_show_uid(Rest, Z1, Z2, F1, TrUserData);
+dfp_read_field_def_notify_show(<<>>, 0, 0, F1, _) ->
+    #notify_show{uid = F1};
+dfp_read_field_def_notify_show(Other, Z1, Z2, F1,
+			       TrUserData) ->
+    dg_read_field_def_notify_show(Other, Z1, Z2, F1,
+				  TrUserData).
+
+dg_read_field_def_notify_show(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_notify_show(Rest, N + 7,
+				  X bsl N + Acc, F1, TrUserData);
+dg_read_field_def_notify_show(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_notify_show_uid(Rest, 0, 0, F1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_notify_show(Rest, 0, 0, F1, TrUserData);
+	    1 -> skip_64_notify_show(Rest, 0, 0, F1, TrUserData);
+	    2 ->
+		skip_length_delimited_notify_show(Rest, 0, 0, F1,
+						  TrUserData);
+	    5 -> skip_32_notify_show(Rest, 0, 0, F1, TrUserData)
+	  end
+    end;
+dg_read_field_def_notify_show(<<>>, 0, 0, F1, _) ->
+    #notify_show{uid = F1}.
+
+d_field_notify_show_uid(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F1, TrUserData)
+    when N < 57 ->
+    d_field_notify_show_uid(Rest, N + 7, X bsl N + Acc, F1,
+			    TrUserData);
+d_field_notify_show_uid(<<0:1, X:7, Rest/binary>>, N,
+			Acc, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_notify_show(Rest, 0, 0, NewFValue,
+				   TrUserData).
+
+
+skip_varint_notify_show(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, TrUserData) ->
+    skip_varint_notify_show(Rest, Z1, Z2, F1, TrUserData);
+skip_varint_notify_show(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F1, TrUserData) ->
+    dfp_read_field_def_notify_show(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
+skip_length_delimited_notify_show(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_notify_show(Rest, N + 7,
+				      X bsl N + Acc, F1, TrUserData);
+skip_length_delimited_notify_show(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_notify_show(Rest2, 0, 0, F1,
+				   TrUserData).
+
+
+skip_32_notify_show(<<_:32, Rest/binary>>, Z1, Z2, F1,
+		    TrUserData) ->
+    dfp_read_field_def_notify_show(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
+skip_64_notify_show(<<_:64, Rest/binary>>, Z1, Z2, F1,
+		    TrUserData) ->
+    dfp_read_field_def_notify_show(Rest, Z1, Z2, F1,
+				   TrUserData).
+
+
 d_msg_rsp_player_chat(Bin, TrUserData) ->
     dfp_read_field_def_rsp_player_chat(Bin, 0, 0,
 				       id(undefined, TrUserData),
@@ -5583,6 +5847,8 @@ merge_msgs(Prev, New, Opts)
       #req_pay{} -> merge_msg_req_pay(Prev, New, TrUserData);
       #req_ready{} ->
 	  merge_msg_req_ready(Prev, New, TrUserData);
+      #rsp_show{} ->
+	  merge_msg_rsp_show(Prev, New, TrUserData);
       #req_zhuang{} ->
 	  merge_msg_req_zhuang(Prev, New, TrUserData);
       #pb_unit{} -> merge_msg_pb_unit(Prev, New, TrUserData);
@@ -5599,6 +5865,8 @@ merge_msgs(Prev, New, Opts)
       #rsp_task_claim{} ->
 	  merge_msg_rsp_task_claim(Prev, New, TrUserData);
       #pb_task{} -> merge_msg_pb_task(Prev, New, TrUserData);
+      #req_show{} ->
+	  merge_msg_req_show(Prev, New, TrUserData);
       #rsp_player_zhuang{} ->
 	  merge_msg_rsp_player_zhuang(Prev, New, TrUserData);
       #rsp_zhuang{} ->
@@ -5627,6 +5895,8 @@ merge_msgs(Prev, New, Opts)
 	  merge_msg_rsp_player_ready(Prev, New, TrUserData);
       #rsp_ready{} ->
 	  merge_msg_rsp_ready(Prev, New, TrUserData);
+      #notify_show{} ->
+	  merge_msg_notify_show(Prev, New, TrUserData);
       #rsp_player_chat{} ->
 	  merge_msg_rsp_player_chat(Prev, New, TrUserData);
       #rsp_result{} ->
@@ -5705,6 +5975,10 @@ merge_msg_req_pay(#req_pay{}, #req_pay{rmb = NFrmb},
 merge_msg_req_ready(#req_ready{},
 		    #req_ready{type = NFtype}, _) ->
     #req_ready{type = NFtype}.
+
+merge_msg_rsp_show(#rsp_show{},
+		   #rsp_show{status = NFstatus}, _) ->
+    #rsp_show{status = NFstatus}.
 
 merge_msg_req_zhuang(#req_zhuang{},
 		     #req_zhuang{base = NFbase}, _) ->
@@ -5792,6 +6066,8 @@ merge_msg_pb_task(#pb_task{},
 		  #pb_task{id = NFid, num = NFnum, recive = NFrecive},
 		  _) ->
     #pb_task{id = NFid, num = NFnum, recive = NFrecive}.
+
+merge_msg_req_show(_Prev, New, _TrUserData) -> New.
 
 merge_msg_rsp_player_zhuang(#rsp_player_zhuang{},
 			    #rsp_player_zhuang{uid = NFuid, base = NFbase},
@@ -5887,6 +6163,10 @@ merge_msg_rsp_ready(#rsp_ready{},
 		    #rsp_ready{status = NFstatus}, _) ->
     #rsp_ready{status = NFstatus}.
 
+merge_msg_notify_show(#notify_show{},
+		      #notify_show{uid = NFuid}, _) ->
+    #notify_show{uid = NFuid}.
+
 merge_msg_rsp_player_chat(#rsp_player_chat{msg = PFmsg,
 					   url = PFurl},
 			  #rsp_player_chat{msg = NFmsg, url = NFurl,
@@ -5974,6 +6254,8 @@ verify_msg(Msg, Opts) ->
       #req_pay{} -> v_msg_req_pay(Msg, [req_pay], TrUserData);
       #req_ready{} ->
 	  v_msg_req_ready(Msg, [req_ready], TrUserData);
+      #rsp_show{} ->
+	  v_msg_rsp_show(Msg, [rsp_show], TrUserData);
       #req_zhuang{} ->
 	  v_msg_req_zhuang(Msg, [req_zhuang], TrUserData);
       #pb_unit{} -> v_msg_pb_unit(Msg, [pb_unit], TrUserData);
@@ -5990,6 +6272,8 @@ verify_msg(Msg, Opts) ->
       #rsp_task_claim{} ->
 	  v_msg_rsp_task_claim(Msg, [rsp_task_claim], TrUserData);
       #pb_task{} -> v_msg_pb_task(Msg, [pb_task], TrUserData);
+      #req_show{} ->
+	  v_msg_req_show(Msg, [req_show], TrUserData);
       #rsp_player_zhuang{} ->
 	  v_msg_rsp_player_zhuang(Msg, [rsp_player_zhuang],
 				  TrUserData);
@@ -6023,6 +6307,8 @@ verify_msg(Msg, Opts) ->
 				 TrUserData);
       #rsp_ready{} ->
 	  v_msg_rsp_ready(Msg, [rsp_ready], TrUserData);
+      #notify_show{} ->
+	  v_msg_notify_show(Msg, [notify_show], TrUserData);
       #rsp_player_chat{} ->
 	  v_msg_rsp_player_chat(Msg, [rsp_player_chat],
 				TrUserData);
@@ -6098,6 +6384,10 @@ v_msg_req_pay(#req_pay{rmb = F1}, Path, _) ->
 -dialyzer({nowarn_function,v_msg_req_ready/3}).
 v_msg_req_ready(#req_ready{type = F1}, Path, _) ->
     v_type_int32(F1, [type | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_rsp_show/3}).
+v_msg_rsp_show(#rsp_show{status = F1}, Path, _) ->
+    v_type_int32(F1, [status | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_req_zhuang/3}).
 v_msg_req_zhuang(#req_zhuang{base = F1}, Path, _) ->
@@ -6209,6 +6499,9 @@ v_msg_pb_task(#pb_task{id = F1, num = F2, recive = F3},
 v_msg_pb_task(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, pb_task}, X, Path).
 
+-dialyzer({nowarn_function,v_msg_req_show/3}).
+v_msg_req_show(#req_show{}, _Path, _) -> ok.
+
 -dialyzer({nowarn_function,v_msg_rsp_player_zhuang/3}).
 v_msg_rsp_player_zhuang(#rsp_player_zhuang{uid = F1,
 					   base = F2},
@@ -6309,6 +6602,10 @@ v_msg_rsp_player_ready(#rsp_player_ready{uid = F1,
 -dialyzer({nowarn_function,v_msg_rsp_ready/3}).
 v_msg_rsp_ready(#rsp_ready{status = F1}, Path, _) ->
     v_type_sint32(F1, [status | Path]), ok.
+
+-dialyzer({nowarn_function,v_msg_notify_show/3}).
+v_msg_notify_show(#notify_show{uid = F1}, Path, _) ->
+    v_type_int32(F1, [uid | Path]), ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_player_chat/3}).
 v_msg_rsp_player_chat(#rsp_player_chat{msg = F1,
@@ -6490,6 +6787,9 @@ get_msg_defs() ->
      {{msg, req_ready},
       [#field{name = type, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []}]},
+     {{msg, rsp_show},
+      [#field{name = status, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, req_zhuang},
       [#field{name = base, fnum = 1, rnum = 2, type = sint32,
 	      occurrence = required, opts = []}]},
@@ -6556,6 +6856,7 @@ get_msg_defs() ->
 	      occurrence = required, opts = []},
        #field{name = recive, fnum = 3, rnum = 4, type = int32,
 	      occurrence = required, opts = []}]},
+     {{msg, req_show}, []},
      {{msg, rsp_player_zhuang},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = required, opts = []},
@@ -6625,6 +6926,9 @@ get_msg_defs() ->
      {{msg, rsp_ready},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []}]},
+     {{msg, notify_show},
+      [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, rsp_player_chat},
       [#field{name = msg, fnum = 1, rnum = 2, type = string,
 	      occurrence = optional, opts = []},
@@ -6673,16 +6977,16 @@ get_msg_defs() ->
 
 get_msg_names() ->
     [req_join, req_login, rsp_create_room, rsp_pay, req_pay,
-     req_ready, req_zhuang, pb_unit, rsp_game_start,
-     rsp_start, pb_room_info, pb_player, rsp_join,
-     rsp_task_claim, pb_task, rsp_player_zhuang, rsp_zhuang,
-     rsp_player_leave, rsp_leave, rsp_player_score,
-     rsp_score, rsp_zhuang_end, rsp_new_player, rsp_login,
-     req_task_claim, req_create_room, req_task,
-     rsp_player_ready, rsp_ready, rsp_player_chat,
-     rsp_result, req_start, rsp_chat, rsp_task, req_score,
-     req_leave, rsp_content, req_content, req_chat, rsp_pub,
-     req_pub].
+     req_ready, rsp_show, req_zhuang, pb_unit,
+     rsp_game_start, rsp_start, pb_room_info, pb_player,
+     rsp_join, rsp_task_claim, pb_task, req_show,
+     rsp_player_zhuang, rsp_zhuang, rsp_player_leave,
+     rsp_leave, rsp_player_score, rsp_score, rsp_zhuang_end,
+     rsp_new_player, rsp_login, req_task_claim,
+     req_create_room, req_task, rsp_player_ready, rsp_ready,
+     notify_show, rsp_player_chat, rsp_result, req_start,
+     rsp_chat, rsp_task, req_score, req_leave, rsp_content,
+     req_content, req_chat, rsp_pub, req_pub].
 
 
 get_enum_names() -> [].
@@ -6727,6 +7031,9 @@ find_msg_def(req_pay) ->
 	    occurrence = required, opts = []}];
 find_msg_def(req_ready) ->
     [#field{name = type, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
+find_msg_def(rsp_show) ->
+    [#field{name = status, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []}];
 find_msg_def(req_zhuang) ->
     [#field{name = base, fnum = 1, rnum = 2, type = sint32,
@@ -6794,6 +7101,7 @@ find_msg_def(pb_task) ->
 	    occurrence = required, opts = []},
      #field{name = recive, fnum = 3, rnum = 4, type = int32,
 	    occurrence = required, opts = []}];
+find_msg_def(req_show) -> [];
 find_msg_def(rsp_player_zhuang) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = required, opts = []},
@@ -6863,6 +7171,9 @@ find_msg_def(rsp_player_ready) ->
 find_msg_def(rsp_ready) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []}];
+find_msg_def(notify_show) ->
+    [#field{name = uid, fnum = 1, rnum = 2, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(rsp_player_chat) ->
     [#field{name = msg, fnum = 1, rnum = 2, type = string,
 	    occurrence = optional, opts = []},
