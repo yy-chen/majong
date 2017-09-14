@@ -16,10 +16,8 @@
   upload/1
 ]).
 
-upload(Bin) when is_binary(Bin) ->
-  upload(binary_to_list(Bin));
 upload(Bin) ->
-  upload("majong", Bin).
+  upload("majong", unicode:characters_to_binary(Bin)).
 
 upload(Bucket, FileName) ->
   upload(Bucket, FileName, 0).
