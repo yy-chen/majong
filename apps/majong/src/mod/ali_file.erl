@@ -33,7 +33,7 @@ upload(Bucket, Bin, Time) ->
 
   Authorization = "OSS " ++ ?AccessKeyId ++ ":" ++ binary_to_list(Sign),
 
-  Url = "http://" ++ Bucket ++ ".oss-cn-shanghai.aliyuncs.com" ++ "/" ++ File ,
+  Url = "http://" ++ Bucket ++ ".oss-cn-shanghai.aliyuncs.com" ++ "/voice/" ++ File ,
   Host =  Bucket ++ ".oss-cn-shanghai.aliyuncs.com",
   Headers = [{"Date", Gmt}, {"Content-Type", "application/octet-stream"},
     {"x-oss-object-acl", "public-read"}, {"Authorization", Authorization}, {"Host", Host}],
