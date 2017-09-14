@@ -26,7 +26,7 @@ upload(Bucket, FileName) ->
 
 upload(Bucket, Bin, Time) ->
   Body = Bin,
-  File = dhcrypt:md5(Bin),
+  File = dhcrypt:md5(dhtime:timestamp()),
   Gmt = gmt(),
 
   Data = "PUT\n" ++ "\n" ++ "application/octet-stream\n" ++ Gmt ++ "\n"
