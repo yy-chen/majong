@@ -28,7 +28,7 @@ upload(Bucket, Bin, Time) ->
   Gmt = gmt(),
 
   Data = "PUT\n" ++ "\n" ++ "application/octet-stream\n" ++ Gmt ++ "\n"
-    ++ "x-oss-object-acl:public-read\n" ++ "/" ++ Bucket ++ "/" ++ File,
+    ++ "x-oss-object-acl:public-read\n" ++ "/" ++ Bucket ++ "/voice/" ++ File,
   Sign = base64:encode(crypto:hmac(sha, ?AccessSecret, list_to_binary(Data))),
 
   Authorization = "OSS " ++ ?AccessKeyId ++ ":" ++ binary_to_list(Sign),
