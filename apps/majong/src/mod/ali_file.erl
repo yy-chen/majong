@@ -41,7 +41,7 @@ upload(Bucket, Bin, Time) ->
     {"x-oss-object-acl", "public-read"}, {"Authorization", Authorization}, {"Host", Host}],
 
   case ibrowse:send_req(Url, Headers, put, Body, [], 60000) of
-    {ok, "200", _, _} -> File;
+    {ok, "200", _, _} -> Url;
     {_, Code, RespHeader, RespBody} ->
       lager:info("Code: ~p, Header: ~p, RespBody: ~p", [Code, RespHeader, RespBody]),
       if
