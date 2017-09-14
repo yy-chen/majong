@@ -24,7 +24,7 @@ upload(Bucket, FileName) ->
 
 upload(Bucket, Bin, Time) ->
   Body = Bin,
-  File = dhcrypt:md5(dhtime:timestamp()),
+  File = dhcrypt:md5(Bin),
   Gmt = gmt(),
 
   Data = "PUT\n" ++ "\n" ++ "application/octet-stream\n" ++ Gmt ++ "\n"
@@ -39,7 +39,7 @@ upload(Bucket, Bin, Time) ->
     {"x-oss-object-acl", "public-read"}, {"Authorization", Authorization}, {"Host", Host}],
 
   case ibrowse:send_req(Url, Headers, put, Body, [], 60000) of
-    {ok, "200", _, _} -> Url;
+    {ok, "200", _, _} -> list_to_binary(Url);
     {_, Code, RespHeader, RespBody} ->
       lager:info("Code: ~p, Header: ~p, RespBody: ~p", [Code, RespHeader, RespBody]),
       if
