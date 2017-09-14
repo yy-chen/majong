@@ -28,12 +28,12 @@ upload(Bucket, Bin, Time) ->
   Gmt = gmt(),
 
   Data = "PUT\n" ++ "\n" ++ "application/octet-stream\n" ++ Gmt ++ "\n"
-    ++ "x-oss-object-acl:public-read\n" ++ "/" ++ Bucket ++ "/voice/" ++ File,
+    ++ "x-oss-object-acl:public-read\n" ++ "/" ++ Bucket ++ "/" ++ File,
   Sign = base64:encode(crypto:hmac(sha, ?AccessSecret, list_to_binary(Data))),
 
   Authorization = "OSS " ++ ?AccessKeyId ++ ":" ++ binary_to_list(Sign),
 
-  Url = "http://" ++ Bucket ++ ".oss-cn-shanghai.aliyuncs.com" ++ "/" ++ File ,
+  Url = "http://" ++ Bucket ++ ".oss-cn-shanghai.aliyuncs.com" ++ "/voice/" ++ File ,
   Host =  Bucket ++ ".oss-cn-shanghai.aliyuncs.com",
   Headers = [{"Date", Gmt}, {"Content-Type", "application/octet-stream"},
     {"x-oss-object-acl", "public-read"}, {"Authorization", Authorization}, {"Host", Host}],
