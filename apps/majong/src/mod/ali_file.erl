@@ -16,6 +16,8 @@
   upload/1
 ]).
 
+upload(Bin) when is_binary(Bin) ->
+  upload(binary_to_list(Bin));
 upload(Bin) ->
   upload("majong", Bin).
 

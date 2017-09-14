@@ -147,7 +147,7 @@ notify_show(Uid) ->
 
 chat(Bin) ->
   #req_chat{msg = Msg, voice = Voice} = majong_pb:decode_msg(Bin, req_chat),
-  Url = ali_file:upload(binary_to_list(Voice)),
+  Url = ali_file:upload(Voice),
   #{room_id := RoomId} = load(),
   room:async_exec(RoomId, {room_base, chat, [mod_play:id(), Url, Msg]}),
   player:rsp(2, 16, #rsp_chat{status = 0}).
