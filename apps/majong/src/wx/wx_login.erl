@@ -8,8 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(wx_login).
 -author("cyy").
--define(AppId, "wx4403974ea8b2b025").
--define(AndroidSecret, "589365546327463d7a68c0bcbcf826e6").
+%%-define(AppId, "wx4403974ea8b2b025").
+%%-define(AndroidSecret, "589365546327463d7a68c0bcbcf826e6").
 %% API
 -export([
   login/2
@@ -18,10 +18,10 @@
 login(Channel, Code) ->
   lager:info("channel : ~p code : ~p", [Channel, Code]),
   Secret = if
-             Channel == 1 -> ?AndroidSecret
+             Channel == 1 -> app_ctl:get_cfg(android_secrect)
            end,
   Url = "https://api.weixin.qq.com/sns/oauth2/access_token" ++
-  "?appid=" ++ ?AppId ++ "&secret=" ++ Secret ++ "&code=" ++ Code ++ "&grant_type=authorization_code",
+  "?appid=" ++ app_ctl:get_cfg(appid) ++ "&secret=" ++ Secret ++ "&code=" ++ Code ++ "&grant_type=authorization_code",
   {ok, {{_, 200, _}, _, Res}} = httpc:request(get, {Url, []}, [], []),
   Res1 = jiffy:decode(Res, [return_maps]),
   case maps:get(<<"openid">>, Res1, undefined) of

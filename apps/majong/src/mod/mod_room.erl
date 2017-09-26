@@ -24,7 +24,9 @@
   notify_zhuang_end/2,
   notify_cards/1,
   notify_score/3,
-  notify_show/1
+  notify_show/1,
+  notify_all_show/0,
+  notify_dismiss/0
 ]).
 
 %%#{room_id => int()}
@@ -39,7 +41,8 @@ dispatch(C, Bin) ->
     10 -> zhuang(Bin);
     13 -> score(Bin);
     16 -> chat(Bin);
-    18 -> show()
+    18 -> show();
+    21 -> dismiss()
   end.
 
 create(Bin) ->
@@ -144,6 +147,19 @@ show() ->
 
 notify_show(Uid) ->
   player:rsp(2, 19, #notify_show{uid = Uid}).
+
+notify_all_show() ->
+  player:rsp(2, 19, #notify_all_show{}).
+
+dismiss() ->
+  #{room_id := RoomId} = load(),
+  case room:sync_exec(RoomId, {room_base, dismiss, [mod_play:id()]}) of
+    {error, _} -> player:rsp(2, 21, #rsp_dismiss{status = -1});
+    _ -> player:rsp(2, 21, #rsp_dismiss{status = 0})
+  end.
+
+notify_dismiss() ->
+  player:rsp(2, 22, #notify_dismiss{}).
 
 chat(Bin) ->
   #req_chat{msg = Msg, voice = _Voice} = majong_pb:decode_msg(Bin, req_chat),

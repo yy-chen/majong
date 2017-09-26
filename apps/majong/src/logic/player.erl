@@ -19,6 +19,8 @@
   async_exec/2
 ]).
 
+-include("majong_pb.hrl").
+
 start_link() ->
   gen_server:start_link(?MODULE, [], []).
 
@@ -78,10 +80,13 @@ terminate(_Reason, _State) ->
 dispatch(<<G:32, C:32, Bin/binary>>) ->
   lager:info("g : ~p c : ~p", [G, C]),
   case G of
+    0 -> rsp(0, 0, #rsp_heart{time = dhtime:local_timestamp()});
     1 -> mod_play:dispatch(C, Bin);
     2 -> mod_room:dispatch(C, Bin);
     4 -> mod_feedback:dispatch(C, Bin);
-    5 -> mod_pay:dispatch(C, Bin)
+    5 -> mod_pay:dispatch(C, Bin);
+    6 -> mod_rank:dispatch(C, Bin);
+    100 -> mod_play:client_data(C, Bin)
   end.
 
 rsp(G, C, R) ->

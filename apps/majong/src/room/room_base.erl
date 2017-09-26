@@ -19,7 +19,8 @@
   leave/1,
   ready/2,
   start/1,
-  chat/3
+  chat/3,
+  dismiss/1
 ]).
 
 %%% players => [#{uid => 1, logo => 2, name => 3}]
@@ -75,6 +76,12 @@ start(Uid) ->
       end
   end.
 
+dismiss(Uid) ->
+  #{owner := Owner, players := Players} = _Room = load(),
+  if
+    Owner =/= Uid -> {error, no_owner};
+    true -> multi_cast(Players, {mod_room, dismiss, []})
+  end.
 
 chat(Uid, Url, Msg) ->
   #{players := Players} = load(),

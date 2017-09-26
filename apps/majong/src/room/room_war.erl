@@ -82,19 +82,19 @@ zhuang(Uid, Base) ->
   if
     length(L) == length(Players) ->
       {ZhuangUid, Base1} = if
-                      D =/= [] ->
-                        N = rand:uniform(length(D)),
-                        ZhuangId = lists:nth(N, D),
-                        {ZhuangId, 3};
-                      C =/= [] ->
-                        N = rand:uniform(length(C)),
-                        ZhuangId = lists:nth(N, C),
-                        {ZhuangId, 2};
-                      true ->
-                        N = rand:uniform(length(B)),
-                        ZhuangId = lists:nth(N, B),
-                        {ZhuangId, 1}
-                    end,
+                             D =/= [] ->
+                               N = rand:uniform(length(D)),
+                               ZhuangId = lists:nth(N, D),
+                               {ZhuangId, 3};
+                             C =/= [] ->
+                               N = rand:uniform(length(C)),
+                               ZhuangId = lists:nth(N, C),
+                               {ZhuangId, 2};
+                             true ->
+                               N = rand:uniform(length(B)),
+                               ZhuangId = lists:nth(N, B),
+                               {ZhuangId, 1}
+                           end,
       lager:info("notify zhuang : ~p ~p", [ZhuangUid, Base1]),
       down(Room1#{zhuang => {ZhuangUid, Base1}}),
       multi_cast(Players, {mod_room, notify_zhuang_end, [ZhuangUid, Base1]});
@@ -122,7 +122,13 @@ score(Uid, Score) ->
   end.
 
 show(Uid) ->
-  #{players := Uids} = load(),
+  #{players := Uids, show_player := ShowPlayer} = RoomInfo = load(),
+  S1 = lists:usort([Uid | ShowPlayer]),
+  down(RoomInfo#{show_player => S1}),
+  if
+    length(S1) == length(Uids) -> multi_cast(Uids, {mod_room, notify_all_show, []});
+    true -> ok
+  end,
   multi_cast(Uids, {mod_room, notify_show, [Uid]}).
 
 trans(Num) ->
@@ -135,7 +141,7 @@ down(Info) ->
 
 init() ->
   Info = load(),
-  Info#{c_zhuang => #{1 => [], 2 => [], 3 => []}, cards => #{}, score => #{}, players => []}.
+  Info#{c_zhuang => #{1 => [], 2 => [], 3 => []}, cards => #{}, score => #{}, players => [], show_player => []}.
 
 load() ->
   case get(?PDict) of

@@ -19,7 +19,8 @@
 -export([
   id/0,
   id/1,
-  base/0
+  base/0,
+  client_data/2
 ]).
 
 dispatch(C, B) ->
@@ -48,6 +49,13 @@ login(Bin) ->
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),
   ok.
+
+client_data(1, Bin) ->
+  #req_save_data{data = Data} = majong_pb:decode_msg(Bin, req_save_data),
+  put(client_data, Data);
+
+client_data(2, _Bin) ->
+  player:rsp(100, 2, #rsp_get_data{data = get(client_data)}).
 
 id(Uid) -> put(user_id, Uid).
 id() -> get(user_id).

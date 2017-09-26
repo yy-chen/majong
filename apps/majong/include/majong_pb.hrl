@@ -32,11 +32,33 @@
         }).
 -endif.
 
+-ifndef('PB_RANK_PLAYER_PB_H').
+-define('PB_RANK_PLAYER_PB_H', true).
+-record(pb_rank_player,
+        {name,                          % = 1, string
+         logo,                          % = 2, string
+         num                            % = 3, int32
+        }).
+-endif.
+
+-ifndef('RSP_COINS_RANK_PB_H').
+-define('RSP_COINS_RANK_PB_H', true).
+-record(rsp_coins_rank,
+        {players = []                   % = 1, [{msg,pb_rank_player}]
+        }).
+-endif.
+
 -ifndef('RSP_PAY_PB_H').
 -define('RSP_PAY_PB_H', true).
 -record(rsp_pay,
         {status,                        % = 1, int32
-         coins                          % = 2, int32 (optional)
+         coins,                         % = 2, int32 (optional)
+         nonce_str,                     % = 3, string (optional)
+         sign,                          % = 4, string (optional)
+         err_code_des,                  % = 5, string (optional)
+         trade_type,                    % = 6, string (optional)
+         prepay_id,                     % = 7, string (optional)
+         order_id                       % = 8, string (optional)
         }).
 -endif.
 
@@ -90,6 +112,41 @@
         }).
 -endif.
 
+-ifndef('RSP_HEART_PB_H').
+-define('RSP_HEART_PB_H', true).
+-record(rsp_heart,
+        {time                           % = 1, int32
+        }).
+-endif.
+
+-ifndef('RSP_DISMISS_PB_H').
+-define('RSP_DISMISS_PB_H', true).
+-record(rsp_dismiss,
+        {status                         % = 1, int32
+        }).
+-endif.
+
+-ifndef('REQ_DISMISS_PB_H').
+-define('REQ_DISMISS_PB_H', true).
+-record(req_dismiss,
+        {
+        }).
+-endif.
+
+-ifndef('RSP_GET_DATA_PB_H').
+-define('RSP_GET_DATA_PB_H', true).
+-record(rsp_get_data,
+        {data                           % = 1, string
+        }).
+-endif.
+
+-ifndef('REQ_GET_DATA_PB_H').
+-define('REQ_GET_DATA_PB_H', true).
+-record(req_get_data,
+        {
+        }).
+-endif.
+
 -ifndef('PB_ROOM_INFO_PB_H').
 -define('PB_ROOM_INFO_PB_H', true).
 -record(pb_room_info,
@@ -123,6 +180,21 @@
         {status,                        % = 1, sint32
          players = [],                  % = 2, [{msg,pb_player}]
          room_info                      % = 3, {msg,pb_room_info} (optional)
+        }).
+-endif.
+
+-ifndef('RSP_BUY_GEM_PB_H').
+-define('RSP_BUY_GEM_PB_H', true).
+-record(rsp_buy_gem,
+        {status,                        % = 1, int32
+         gems                           % = 2, int32 (optional)
+        }).
+-endif.
+
+-ifndef('REQ_BUY_GEM_PB_H').
+-define('REQ_BUY_GEM_PB_H', true).
+-record(req_buy_gem,
+        {coins                          % = 1, int32
         }).
 -endif.
 
@@ -202,6 +274,13 @@
         }).
 -endif.
 
+-ifndef('NOTIFY_DISMISS_PB_H').
+-define('NOTIFY_DISMISS_PB_H', true).
+-record(notify_dismiss,
+        {
+        }).
+-endif.
+
 -ifndef('RSP_NEW_PLAYER_PB_H').
 -define('RSP_NEW_PLAYER_PB_H', true).
 -record(rsp_new_player,
@@ -239,10 +318,40 @@
         }).
 -endif.
 
+-ifndef('RSP_GEM_RANK_PB_H').
+-define('RSP_GEM_RANK_PB_H', true).
+-record(rsp_gem_rank,
+        {players = []                   % = 1, [{msg,pb_rank_player}]
+        }).
+-endif.
+
+-ifndef('REQ_GEM_RANK_PB_H').
+-define('REQ_GEM_RANK_PB_H', true).
+-record(req_gem_rank,
+        {
+        }).
+-endif.
+
 -ifndef('REQ_TASK_PB_H').
 -define('REQ_TASK_PB_H', true).
 -record(req_task,
         {
+        }).
+-endif.
+
+-ifndef('RSP_CHECK_PAY_PB_H').
+-define('RSP_CHECK_PAY_PB_H', true).
+-record(rsp_check_pay,
+        {status,                        % = 1, int32
+         order_id,                      % = 2, string
+         coins                          % = 3, int32 (optional)
+        }).
+-endif.
+
+-ifndef('RES_CHECK_PAY_PB_H').
+-define('RES_CHECK_PAY_PB_H', true).
+-record(res_check_pay,
+        {order_id                       % = 1, string
         }).
 -endif.
 
@@ -291,6 +400,13 @@
         }).
 -endif.
 
+-ifndef('REQ_HEART_PB_H').
+-define('REQ_HEART_PB_H', true).
+-record(req_heart,
+        {
+        }).
+-endif.
+
 -ifndef('RSP_CHAT_PB_H').
 -define('RSP_CHAT_PB_H', true).
 -record(rsp_chat,
@@ -298,10 +414,38 @@
         }).
 -endif.
 
+-ifndef('RSP_SAVE_DATA_PB_H').
+-define('RSP_SAVE_DATA_PB_H', true).
+-record(rsp_save_data,
+        {status                         % = 1, int32
+        }).
+-endif.
+
+-ifndef('REQ_SAVE_DATA_PB_H').
+-define('REQ_SAVE_DATA_PB_H', true).
+-record(req_save_data,
+        {data                           % = 1, string
+        }).
+-endif.
+
+-ifndef('REQ_COINS_RANK_PB_H').
+-define('REQ_COINS_RANK_PB_H', true).
+-record(req_coins_rank,
+        {
+        }).
+-endif.
+
 -ifndef('RSP_TASK_PB_H').
 -define('RSP_TASK_PB_H', true).
 -record(rsp_task,
         {tasks = []                     % = 1, [{msg,pb_task}]
+        }).
+-endif.
+
+-ifndef('NOTIFY_ALL_SHOW_PB_H').
+-define('NOTIFY_ALL_SHOW_PB_H', true).
+-record(notify_all_show,
+        {
         }).
 -endif.
 

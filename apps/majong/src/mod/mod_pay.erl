@@ -22,4 +22,9 @@ dispatch(C, Bin) ->
 pay(Bin) ->
   #req_pay{rmb = Rmb} = majong_pb:decode_msg(Bin, req_pay),
   lager:info("rmb : ~p", [Rmb]),
+  Time = dhtime:timestamp(),
+  Uid = mod_play:id(),
+  T1 = integer_to_binary(Uid),
+  T2 = integer_to_binary(Time),
+  OrderId = << T1/binary, <<"_">>/binary,  T2/binary>>,
   player:rsp(5, 1, #rsp_pay{status = 0, coins = Rmb * 10}).
