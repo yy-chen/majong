@@ -24,6 +24,7 @@ upload(Bucket, FileName) ->
 
 upload(Bucket, Bin, Time) ->
   Body = Bin,
+  lager:info("bin size : ~p", [byte_size(Bin)]),
   File = dhcrypt:md5(Bin),
   Gmt = gmt(),
 
