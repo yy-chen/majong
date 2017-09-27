@@ -162,8 +162,8 @@ notify_dismiss() ->
   player:rsp(2, 22, #notify_dismiss{}).
 
 chat(Bin) ->
-  #req_chat{msg = Msg, voice = _Voice} = majong_pb:decode_msg(Bin, req_chat),
-  Url = ali_file:upload(Bin),
+  #req_chat{msg = Msg, voice = Voice} = majong_pb:decode_msg(Bin, req_chat),
+  Url = ali_file:upload(Voice),
   #{room_id := RoomId} = load(),
   room:async_exec(RoomId, {room_base, chat, [mod_play:id(), Url, Msg]}),
   player:rsp(2, 16, #rsp_chat{status = 0}).
