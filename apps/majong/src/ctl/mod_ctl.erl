@@ -23,7 +23,7 @@ start_player_sup() ->
   supervisor:start_child(majong_sup, ChildSpec).
 
 start_listen() ->
-  SockOpt = [binary, {packet, 2}, {active, true}, {reuseaddr, true}, {nodelay, true},
+  SockOpt = [binary, {packet, 4}, {active, true}, {reuseaddr, true}, {nodelay, true},
     {delay_send, false}, {send_timeout, 5000}, {keepalive, true}, {ip, {0, 0, 0, 0}}],
   {ok, _} = dhtcp:start(6667, SockOpt, 10, {supervisor, start_child, [player_sup, []]}, agent),
   lager:info("tcp listen  ok").
