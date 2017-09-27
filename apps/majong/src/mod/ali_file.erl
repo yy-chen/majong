@@ -17,7 +17,7 @@
 ]).
 
 upload(Bin) ->
-  upload("majong", unicode:characters_to_binary(Bin)).
+  upload("majong", Bin).
 
 upload(Bucket, FileName) ->
   upload(Bucket, FileName, 0).
