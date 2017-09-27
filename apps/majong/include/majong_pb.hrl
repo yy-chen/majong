@@ -482,7 +482,7 @@
 -define('REQ_CHAT_PB_H', true).
 -record(req_chat,
         {msg,                           % = 1, string (optional)
-         voice                          % = 2, string (optional)
+         voice = []                     % = 2, [bytes]
         }).
 -endif.
 

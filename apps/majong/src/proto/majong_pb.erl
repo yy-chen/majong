@@ -1033,12 +1033,11 @@ e_msg_req_chat(#req_chat{msg = F1, voice = F2}, Bin,
 		  e_type_string(TrF1, <<Bin/binary, 10>>)
 		end
 	 end,
-    if F2 == undefined -> B1;
-       true ->
-	   begin
-	     TrF2 = id(F2, TrUserData),
-	     e_type_string(TrF2, <<B1/binary, 18>>)
-	   end
+    begin
+      TrF2 = id(F2, TrUserData),
+      if TrF2 == [] -> B1;
+	 true -> e_field_req_chat_voice(TrF2, B1, TrUserData)
+      end
     end.
 
 e_msg_rsp_pub(Msg, TrUserData) ->
@@ -1152,6 +1151,13 @@ e_field_rsp_task_tasks([Elem | Rest], Bin,
     e_field_rsp_task_tasks(Rest, Bin3, TrUserData);
 e_field_rsp_task_tasks([], Bin, _TrUserData) -> Bin.
 
+e_field_req_chat_voice([Elem | Rest], Bin,
+		       TrUserData) ->
+    Bin2 = <<Bin/binary, 18>>,
+    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
+    e_field_req_chat_voice(Rest, Bin3, TrUserData);
+e_field_req_chat_voice([], Bin, _TrUserData) -> Bin.
+
 
 
 e_type_sint(Value, Bin) when Value >= 0 ->
@@ -1170,6 +1176,14 @@ e_type_string(S, Bin) ->
     Utf8 = unicode:characters_to_binary(S),
     Bin2 = e_varint(byte_size(Utf8), Bin),
     <<Bin2/binary, Utf8/binary>>.
+
+e_type_bytes(Bytes, Bin) when is_binary(Bytes) ->
+    Bin2 = e_varint(byte_size(Bytes), Bin),
+    <<Bin2/binary, Bytes/binary>>;
+e_type_bytes(Bytes, Bin) when is_list(Bytes) ->
+    BytesBin = iolist_to_binary(Bytes),
+    Bin2 = e_varint(byte_size(BytesBin), Bin),
+    <<Bin2/binary, BytesBin/binary>>.
 
 e_varint(N, Bin) when N =< 127 -> <<Bin/binary, N>>;
 e_varint(N, Bin) ->
@@ -7705,8 +7719,8 @@ skip_64_req_content(<<_:64, Rest/binary>>, Z1, Z2, F1,
 
 d_msg_req_chat(Bin, TrUserData) ->
     dfp_read_field_def_req_chat(Bin, 0, 0,
-				id(undefined, TrUserData),
-				id(undefined, TrUserData), TrUserData).
+				id(undefined, TrUserData), id([], TrUserData),
+				TrUserData).
 
 dfp_read_field_def_req_chat(<<10, Rest/binary>>, Z1, Z2,
 			    F1, F2, TrUserData) ->
@@ -7715,8 +7729,10 @@ dfp_read_field_def_req_chat(<<18, Rest/binary>>, Z1, Z2,
 			    F1, F2, TrUserData) ->
     d_field_req_chat_voice(Rest, Z1, Z2, F1, F2,
 			   TrUserData);
-dfp_read_field_def_req_chat(<<>>, 0, 0, F1, F2, _) ->
-    #req_chat{msg = F1, voice = F2};
+dfp_read_field_def_req_chat(<<>>, 0, 0, F1, F2,
+			    TrUserData) ->
+    #req_chat{msg = F1,
+	      voice = lists_reverse(F2, TrUserData)};
 dfp_read_field_def_req_chat(Other, Z1, Z2, F1, F2,
 			    TrUserData) ->
     dg_read_field_def_req_chat(Other, Z1, Z2, F1, F2,
@@ -7746,8 +7762,10 @@ dg_read_field_def_req_chat(<<0:1, X:7, Rest/binary>>, N,
 	    5 -> skip_32_req_chat(Rest, 0, 0, F1, F2, TrUserData)
 	  end
     end;
-dg_read_field_def_req_chat(<<>>, 0, 0, F1, F2, _) ->
-    #req_chat{msg = F1, voice = F2}.
+dg_read_field_def_req_chat(<<>>, 0, 0, F1, F2,
+			   TrUserData) ->
+    #req_chat{msg = F1,
+	      voice = lists_reverse(F2, TrUserData)}.
 
 d_field_req_chat_msg(<<1:1, X:7, Rest/binary>>, N, Acc,
 		     F1, F2, TrUserData)
@@ -7769,12 +7787,12 @@ d_field_req_chat_voice(<<1:1, X:7, Rest/binary>>, N,
     d_field_req_chat_voice(Rest, N + 7, X bsl N + Acc, F1,
 			   F2, TrUserData);
 d_field_req_chat_voice(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F1, _, TrUserData) ->
+		       Acc, F1, F2, TrUserData) ->
     Len = X bsl N + Acc,
-    <<Utf8:Len/binary, Rest2/binary>> = Rest,
-    NewFValue = unicode:characters_to_list(Utf8, unicode),
-    dfp_read_field_def_req_chat(Rest2, 0, 0, F1, NewFValue,
-				TrUserData).
+    <<Bytes:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = binary:copy(Bytes),
+    dfp_read_field_def_req_chat(Rest2, 0, 0, F1,
+				cons(NewFValue, F2, TrUserData), TrUserData).
 
 
 skip_varint_req_chat(<<1:1, _:7, Rest/binary>>, Z1, Z2,
@@ -8518,15 +8536,12 @@ merge_msg_req_content(#req_content{},
 
 merge_msg_req_chat(#req_chat{msg = PFmsg,
 			     voice = PFvoice},
-		   #req_chat{msg = NFmsg, voice = NFvoice}, _) ->
+		   #req_chat{msg = NFmsg, voice = NFvoice}, TrUserData) ->
     #req_chat{msg =
 		  if NFmsg =:= undefined -> PFmsg;
 		     true -> NFmsg
 		  end,
-	      voice =
-		  if NFvoice =:= undefined -> PFvoice;
-		     true -> NFvoice
-		  end}.
+	      voice = 'erlang_++'(PFvoice, NFvoice, TrUserData)}.
 
 merge_msg_rsp_pub(#rsp_pub{pub = PFpub},
 		  #rsp_pub{status = NFstatus, pub = NFpub}, _) ->
@@ -9151,8 +9166,11 @@ v_msg_req_chat(#req_chat{msg = F1, voice = F2}, Path,
     if F1 == undefined -> ok;
        true -> v_type_string(F1, [msg | Path])
     end,
-    if F2 == undefined -> ok;
-       true -> v_type_string(F2, [voice | Path])
+    if is_list(F2) ->
+	   _ = [v_type_bytes(Elem, [voice | Path]) || Elem <- F2],
+	   ok;
+       true ->
+	   mk_type_error({invalid_list_of, bytes}, F2, Path)
     end,
     ok.
 
@@ -9202,6 +9220,12 @@ v_type_string(S, Path) when is_list(S); is_binary(S) ->
     end;
 v_type_string(X, Path) ->
     mk_type_error(bad_unicode_string, X, Path).
+
+-dialyzer({nowarn_function,v_type_bytes/2}).
+v_type_bytes(B, _Path) when is_binary(B) -> ok;
+v_type_bytes(B, _Path) when is_list(B) -> ok;
+v_type_bytes(X, Path) ->
+    mk_type_error(bad_binary_value, X, Path).
 
 -spec mk_type_error(_, _, list()) -> no_return().
 mk_type_error(Error, ValueSeen, Path) ->
@@ -9503,8 +9527,8 @@ get_msg_defs() ->
      {{msg, req_chat},
       [#field{name = msg, fnum = 1, rnum = 2, type = string,
 	      occurrence = optional, opts = []},
-       #field{name = voice, fnum = 2, rnum = 3, type = string,
-	      occurrence = optional, opts = []}]},
+       #field{name = voice, fnum = 2, rnum = 3, type = bytes,
+	      occurrence = repeated, opts = []}]},
      {{msg, rsp_pub},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []},
@@ -9821,8 +9845,8 @@ find_msg_def(req_content) ->
 find_msg_def(req_chat) ->
     [#field{name = msg, fnum = 1, rnum = 2, type = string,
 	    occurrence = optional, opts = []},
-     #field{name = voice, fnum = 2, rnum = 3, type = string,
-	    occurrence = optional, opts = []}];
+     #field{name = voice, fnum = 2, rnum = 3, type = bytes,
+	    occurrence = repeated, opts = []}];
 find_msg_def(rsp_pub) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []},
