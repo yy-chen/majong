@@ -164,6 +164,7 @@ notify_dismiss() ->
 chat(Bin) ->
   lager:info("byte size : ~p", [byte_size(Bin)]),
   #req_chat{msg = Msg, voice = [Voice]} = majong_pb:decode_msg(Bin, req_chat),
+  lager:info("voice : ~p", [Voice]),
   Url = ali_file:upload(Voice),
   #{room_id := RoomId} = load(),
   room:async_exec(RoomId, {room_base, chat, [mod_play:id(), Url, Msg]}),
