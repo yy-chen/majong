@@ -162,6 +162,7 @@ notify_dismiss() ->
   player:rsp(2, 22, #notify_dismiss{}).
 
 chat(Bin) ->
+  lager:info("byte size : ~p", [byte_size(Bin)]),
   #req_chat{msg = Msg, voice = [Voice]} = majong_pb:decode_msg(Bin, req_chat),
   Url = ali_file:upload(Voice),
   #{room_id := RoomId} = load(),
