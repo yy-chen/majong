@@ -24,6 +24,7 @@ login(Channel, Code) ->
   "?appid=" ++ app_ctl:get_cfg(appid) ++ "&secret=" ++ Secret ++ "&code=" ++ Code ++ "&grant_type=authorization_code",
   {ok, {{_, 200, _}, _, Res}} = httpc:request(get, {Url, []}, [], []),
   Res1 = jiffy:decode(Res, [return_maps]),
+  lager:info("res : ~p", [Res]),
   case maps:get(<<"openid">>, Res1, undefined) of
     undefined -> {-1, #{}};
     OpenId ->
