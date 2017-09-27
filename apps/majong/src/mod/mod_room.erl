@@ -167,7 +167,6 @@ chat(Bin) ->
           [V] -> ali_file:upload(V);
           _ -> undefined
         end,
-  Url = ali_file:upload(Voice),
   #{room_id := RoomId} = load(),
   room:async_exec(RoomId, {room_base, chat, [mod_play:id(), Url, Msg]}),
   player:rsp(2, 16, #rsp_chat{status = 0}).
