@@ -44,10 +44,10 @@ join(Player) ->
 leave(Uid) ->
   #{players := Players, num := Num} = Room = load(),
   {NewPlayers, F} = lists:foldl(fun(Player, {NPlayers, Flag}) ->
-    #{index := Index, uid := PlayerUid} = Player,
+    #{uid := PlayerUid} = Player,
     if
       Uid == PlayerUid -> {NPlayers, 1};
-      true -> {NPlayers ++ [Player#{index => Index - Flag}], Flag}
+      true -> {NPlayers ++ [Player], Flag}
     end end, {[], 0}, Players),
   down(Room#{players => NewPlayers, num => Num - F}),
   multi_cast(NewPlayers, {mod_room, player_leave, [Uid]}).
