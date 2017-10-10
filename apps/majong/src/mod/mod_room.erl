@@ -17,8 +17,8 @@
   new_player/1,
   player_leave/1,
   player_ready/2,
-  game_start/0,
   game_start/1,
+  game_start/2,
   player_chat/1,
   notify_zhuang/2,
   notify_zhuang_end/2,
@@ -107,8 +107,8 @@ start() ->
     _ -> player:rsp(2, 8, #rsp_start{status = 0})
   end.
 
-game_start() -> player:rsp(2, 9, #rsp_game_start{}).     %%抢庄模式 没庄家
-game_start(Uid) -> player:rsp(2, 9, #rsp_game_start{uid = Uid}).
+game_start(Round) -> player:rsp(2, 9, #rsp_game_start{round = Round}).     %%抢庄模式 没庄家
+game_start(Uid, Round) -> player:rsp(2, 9, #rsp_game_start{uid = Uid, round = Round}).
 
 zhuang(Bin) ->
   #req_zhuang{base = Base} = majong_pb:decode_msg(Bin, req_zhuang),

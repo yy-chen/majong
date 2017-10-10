@@ -101,7 +101,8 @@
 -ifndef('RSP_GAME_START_PB_H').
 -define('RSP_GAME_START_PB_H', true).
 -record(rsp_game_start,
-        {uid                            % = 1, int32 (optional)
+        {uid,                           % = 1, int32 (optional)
+         round                          % = 2, int32
         }).
 -endif.
 

@@ -348,14 +348,19 @@ e_msg_rsp_game_start(Msg, TrUserData) ->
     e_msg_rsp_game_start(Msg, <<>>, TrUserData).
 
 
-e_msg_rsp_game_start(#rsp_game_start{uid = F1}, Bin,
-		     TrUserData) ->
-    if F1 == undefined -> Bin;
-       true ->
-	   begin
-	     TrF1 = id(F1, TrUserData),
-	     e_type_int32(TrF1, <<Bin/binary, 8>>)
-	   end
+e_msg_rsp_game_start(#rsp_game_start{uid = F1,
+				     round = F2},
+		     Bin, TrUserData) ->
+    B1 = if F1 == undefined -> Bin;
+	    true ->
+		begin
+		  TrF1 = id(F1, TrUserData),
+		  e_type_int32(TrF1, <<Bin/binary, 8>>)
+		end
+	 end,
+    begin
+      TrF2 = id(F2, TrUserData),
+      e_type_int32(TrF2, <<B1/binary, 16>>)
     end.
 
 e_msg_rsp_start(Msg, TrUserData) ->
@@ -2602,93 +2607,120 @@ skip_64_pb_unit(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 
 d_msg_rsp_game_start(Bin, TrUserData) ->
     dfp_read_field_def_rsp_game_start(Bin, 0, 0,
+				      id(undefined, TrUserData),
 				      id(undefined, TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_game_start(<<8, Rest/binary>>,
-				  Z1, Z2, F1, TrUserData) ->
-    d_field_rsp_game_start_uid(Rest, Z1, Z2, F1,
+				  Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_game_start_uid(Rest, Z1, Z2, F1, F2,
 			       TrUserData);
-dfp_read_field_def_rsp_game_start(<<>>, 0, 0, F1, _) ->
-    #rsp_game_start{uid = F1};
-dfp_read_field_def_rsp_game_start(Other, Z1, Z2, F1,
+dfp_read_field_def_rsp_game_start(<<16, Rest/binary>>,
+				  Z1, Z2, F1, F2, TrUserData) ->
+    d_field_rsp_game_start_round(Rest, Z1, Z2, F1, F2,
+				 TrUserData);
+dfp_read_field_def_rsp_game_start(<<>>, 0, 0, F1, F2,
+				  _) ->
+    #rsp_game_start{uid = F1, round = F2};
+dfp_read_field_def_rsp_game_start(Other, Z1, Z2, F1, F2,
 				  TrUserData) ->
-    dg_read_field_def_rsp_game_start(Other, Z1, Z2, F1,
+    dg_read_field_def_rsp_game_start(Other, Z1, Z2, F1, F2,
 				     TrUserData).
 
 dg_read_field_def_rsp_game_start(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, TrUserData)
+				 N, Acc, F1, F2, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_game_start(Rest, N + 7,
-				     X bsl N + Acc, F1, TrUserData);
+				     X bsl N + Acc, F1, F2, TrUserData);
 dg_read_field_def_rsp_game_start(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, TrUserData) ->
+				 N, Acc, F1, F2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_game_start_uid(Rest, 0, 0, F1, TrUserData);
+	  d_field_rsp_game_start_uid(Rest, 0, 0, F1, F2,
+				     TrUserData);
+      16 ->
+	  d_field_rsp_game_start_round(Rest, 0, 0, F1, F2,
+				       TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_game_start(Rest, 0, 0, F1, TrUserData);
-	    1 -> skip_64_rsp_game_start(Rest, 0, 0, F1, TrUserData);
+		skip_varint_rsp_game_start(Rest, 0, 0, F1, F2,
+					   TrUserData);
+	    1 ->
+		skip_64_rsp_game_start(Rest, 0, 0, F1, F2, TrUserData);
 	    2 ->
-		skip_length_delimited_rsp_game_start(Rest, 0, 0, F1,
+		skip_length_delimited_rsp_game_start(Rest, 0, 0, F1, F2,
 						     TrUserData);
-	    5 -> skip_32_rsp_game_start(Rest, 0, 0, F1, TrUserData)
+	    5 ->
+		skip_32_rsp_game_start(Rest, 0, 0, F1, F2, TrUserData)
 	  end
     end;
-dg_read_field_def_rsp_game_start(<<>>, 0, 0, F1, _) ->
-    #rsp_game_start{uid = F1}.
+dg_read_field_def_rsp_game_start(<<>>, 0, 0, F1, F2,
+				 _) ->
+    #rsp_game_start{uid = F1, round = F2}.
 
 d_field_rsp_game_start_uid(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F1, TrUserData)
+			   Acc, F1, F2, TrUserData)
     when N < 57 ->
     d_field_rsp_game_start_uid(Rest, N + 7, X bsl N + Acc,
-			       F1, TrUserData);
+			       F1, F2, TrUserData);
 d_field_rsp_game_start_uid(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, TrUserData) ->
+			   Acc, _, F2, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_game_start(Rest, 0, 0, NewFValue,
-				      TrUserData).
+				      F2, TrUserData).
+
+
+d_field_rsp_game_start_round(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F1, F2, TrUserData)
+    when N < 57 ->
+    d_field_rsp_game_start_round(Rest, N + 7, X bsl N + Acc,
+				 F1, F2, TrUserData);
+d_field_rsp_game_start_round(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F1, _, TrUserData) ->
+    <<NewFValue:32/signed-native>> = <<(X bsl N +
+					  Acc):32/unsigned-native>>,
+    dfp_read_field_def_rsp_game_start(Rest, 0, 0, F1,
+				      NewFValue, TrUserData).
 
 
 skip_varint_rsp_game_start(<<1:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, TrUserData) ->
-    skip_varint_rsp_game_start(Rest, Z1, Z2, F1,
+			   Z1, Z2, F1, F2, TrUserData) ->
+    skip_varint_rsp_game_start(Rest, Z1, Z2, F1, F2,
 			       TrUserData);
 skip_varint_rsp_game_start(<<0:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, TrUserData) ->
-    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1,
+			   Z1, Z2, F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
 skip_length_delimited_rsp_game_start(<<1:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, TrUserData)
+				     N, Acc, F1, F2, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_game_start(Rest, N + 7,
-					 X bsl N + Acc, F1, TrUserData);
+					 X bsl N + Acc, F1, F2, TrUserData);
 skip_length_delimited_rsp_game_start(<<0:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, TrUserData) ->
+				     N, Acc, F1, F2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_rsp_game_start(Rest2, 0, 0, F1,
+    dfp_read_field_def_rsp_game_start(Rest2, 0, 0, F1, F2,
 				      TrUserData).
 
 
 skip_32_rsp_game_start(<<_:32, Rest/binary>>, Z1, Z2,
-		       F1, TrUserData) ->
-    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1,
+		       F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
 skip_64_rsp_game_start(<<_:64, Rest/binary>>, Z1, Z2,
-		       F1, TrUserData) ->
-    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1,
+		       F1, F2, TrUserData) ->
+    dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
 				      TrUserData).
 
 
@@ -8240,11 +8272,12 @@ merge_msg_pb_unit(#pb_unit{},
     #pb_unit{type = NFtype, num = NFnum}.
 
 merge_msg_rsp_game_start(#rsp_game_start{uid = PFuid},
-			 #rsp_game_start{uid = NFuid}, _) ->
+			 #rsp_game_start{uid = NFuid, round = NFround}, _) ->
     #rsp_game_start{uid =
 			if NFuid =:= undefined -> PFuid;
 			   true -> NFuid
-			end}.
+			end,
+		    round = NFround}.
 
 merge_msg_rsp_start(#rsp_start{},
 		    #rsp_start{status = NFstatus}, _) ->
@@ -8803,11 +8836,13 @@ v_msg_pb_unit(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, pb_unit}, X, Path).
 
 -dialyzer({nowarn_function,v_msg_rsp_game_start/3}).
-v_msg_rsp_game_start(#rsp_game_start{uid = F1}, Path,
-		     _) ->
+v_msg_rsp_game_start(#rsp_game_start{uid = F1,
+				     round = F2},
+		     Path, _) ->
     if F1 == undefined -> ok;
        true -> v_type_int32(F1, [uid | Path])
     end,
+    v_type_int32(F2, [round | Path]),
     ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_start/3}).
@@ -9320,7 +9355,9 @@ get_msg_defs() ->
 	      occurrence = required, opts = []}]},
      {{msg, rsp_game_start},
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
-	      occurrence = optional, opts = []}]},
+	      occurrence = optional, opts = []},
+       #field{name = round, fnum = 2, rnum = 3, type = int32,
+	      occurrence = required, opts = []}]},
      {{msg, rsp_start},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []}]},
@@ -9636,7 +9673,9 @@ find_msg_def(pb_unit) ->
 	    occurrence = required, opts = []}];
 find_msg_def(rsp_game_start) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
-	    occurrence = optional, opts = []}];
+	    occurrence = optional, opts = []},
+     #field{name = round, fnum = 2, rnum = 3, type = int32,
+	    occurrence = required, opts = []}];
 find_msg_def(rsp_start) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []}];
