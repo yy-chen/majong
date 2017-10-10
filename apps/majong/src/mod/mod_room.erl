@@ -149,7 +149,7 @@ notify_show(Uid) ->
   player:rsp(2, 19, #notify_show{uid = Uid}).
 
 notify_all_show() ->
-  player:rsp(2, 19, #notify_all_show{}).
+  player:rsp(2, 20, #notify_all_show{}).
 
 dismiss() ->
   #{room_id := RoomId} = load(),
