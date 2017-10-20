@@ -109,7 +109,7 @@ score(Uid, Score) ->
   Cards2 = maps:get(Zhuang, C),
   Add = case pokers_type:cmp(Cards1, Cards2) of
           1 -> pokers_type:get_score(Cards1) * Score * Base;
-          0 -> pokers_type:get_score(Cards1) * Score * Base * -1
+          0 -> pokers_type:get_score(Cards2) * Score * Base * -1
         end,
   ZhuangScore = maps:get(Zhuang, Total, 0),
   UidScore = maps:get(Uid, Total, 0),
