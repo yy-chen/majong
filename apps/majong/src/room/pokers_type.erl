@@ -71,6 +71,8 @@ cmp(L1, L2) ->
 
 get_score(L) ->
   Base = niu([P || #{id := P} <- L]),
+  lager:info("pai : ~p", [[P || #{id := P} <- L]]),
+  lager:info("base : ~p", [Base]),
   case Base of
     10 -> 5;
     9 -> 4;
