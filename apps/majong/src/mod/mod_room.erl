@@ -111,12 +111,12 @@ game_start(Round, Cards) ->
   Uid = mod_play:id(),
   Cards1 = maps:get(Uid, Cards),
   lager:info("game start round : ~p", [Round, Cards1]),
-  player:rsp(2, 9, #rsp_game_start{round = Round, cards = Cards1}).     %%抢庄模式 没庄家
+  player:rsp(2, 9, #rsp_game_start{round = Round, cards = unit2pb(Cards1)}).     %%抢庄模式 没庄家
 game_start(Uid, Round, Cards) ->
   Uid = mod_play:id(),
   Cards1 = maps:get(Uid, Cards),
   lager:info("game start round : ~p", [Round]),
-  player:rsp(2, 9, #rsp_game_start{uid = Uid, round = Round, cards = Cards1}).
+  player:rsp(2, 9, #rsp_game_start{uid = Uid, round = Round, cards = unit2pb(Cards1)}).
 
 zhuang(Bin) ->
   #req_zhuang{base = Base} = majong_pb:decode_msg(Bin, req_zhuang),
