@@ -71,8 +71,8 @@ start(Uid) ->
       #{banker := BankerType, round := Round} = RoomInfo,
       down(Room#{ready => [], round => Round + 1}),
       case room_war:choose_banker(Players, BankerType) of
-        undefined -> multi_cast(Players, {mod_room, game_start, [Round]});
-        Uid1 -> multi_cast(Players, {mod_room, game_start, [Uid1, Round]})
+        {undefined, Cards} -> multi_cast(Players, {mod_room, game_start, [Round, Cards]});
+        {Uid1, Cards} -> multi_cast(Players, {mod_room, game_start, [Uid1, Round, Cards]})
       end
   end.
 

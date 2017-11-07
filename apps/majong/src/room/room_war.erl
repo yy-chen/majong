@@ -24,7 +24,7 @@ choose_banker(Players, BankerType) ->
   Cards = get_cards(Uids),
   down(Info#{players => Uids, cards => Cards}),
 %%  notify_cards(Cards),
-  case BankerType of   %% 2: 轮庄 3: 随机庄  4: 固定庄
+  Banker = case BankerType of   %% 2: 轮庄 3: 随机庄  4: 固定庄
     1 -> undefined;
     2 ->
       Info1 = load(),
@@ -52,7 +52,8 @@ choose_banker(Players, BankerType) ->
       Info1 = load(),
       down(Info1#{zhuang => {Zhuang, 1}}),
       Zhuang
-  end.
+  end,
+  {Banker, Cards}.
 
 notify_cards(Cards) ->
   {Pbs, Uids} = maps:fold(fun(K, V, {In, T}) ->

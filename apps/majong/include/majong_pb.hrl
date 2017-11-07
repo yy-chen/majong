@@ -102,7 +102,8 @@
 -define('RSP_GAME_START_PB_H', true).
 -record(rsp_game_start,
         {uid,                           % = 1, int32 (optional)
-         round                          % = 2, int32
+         round,                         % = 2, int32
+         cards = []                     % = 3, [{msg,pb_unit}]
         }).
 -endif.
 

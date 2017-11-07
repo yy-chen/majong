@@ -349,7 +349,7 @@ e_msg_rsp_game_start(Msg, TrUserData) ->
 
 
 e_msg_rsp_game_start(#rsp_game_start{uid = F1,
-				     round = F2},
+				     round = F2, cards = F3},
 		     Bin, TrUserData) ->
     B1 = if F1 == undefined -> Bin;
 	    true ->
@@ -358,9 +358,16 @@ e_msg_rsp_game_start(#rsp_game_start{uid = F1,
 		  e_type_int32(TrF1, <<Bin/binary, 8>>)
 		end
 	 end,
+    B2 = begin
+	   TrF2 = id(F2, TrUserData),
+	   e_type_int32(TrF2, <<B1/binary, 16>>)
+	 end,
     begin
-      TrF2 = id(F2, TrUserData),
-      e_type_int32(TrF2, <<B1/binary, 16>>)
+      TrF3 = id(F3, TrUserData),
+      if TrF3 == [] -> B2;
+	 true ->
+	     e_field_rsp_game_start_cards(TrF3, B2, TrUserData)
+      end
     end.
 
 e_msg_rsp_start(Msg, TrUserData) ->
@@ -1078,6 +1085,21 @@ e_field_rsp_coins_rank_players([Elem | Rest], Bin,
 					   Bin2, TrUserData),
     e_field_rsp_coins_rank_players(Rest, Bin3, TrUserData);
 e_field_rsp_coins_rank_players([], Bin, _TrUserData) ->
+    Bin.
+
+e_mfield_rsp_game_start_cards(Msg, Bin, TrUserData) ->
+    SubBin = e_msg_pb_unit(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_rsp_game_start_cards([Elem | Rest], Bin,
+			     TrUserData) ->
+    Bin2 = <<Bin/binary, 26>>,
+    Bin3 = e_mfield_rsp_game_start_cards(id(Elem,
+					    TrUserData),
+					 Bin2, TrUserData),
+    e_field_rsp_game_start_cards(Rest, Bin3, TrUserData);
+e_field_rsp_game_start_cards([], Bin, _TrUserData) ->
     Bin.
 
 e_mfield_pb_player_pai(Msg, Bin, TrUserData) ->
@@ -2608,120 +2630,148 @@ skip_64_pb_unit(<<_:64, Rest/binary>>, Z1, Z2, F1, F2,
 d_msg_rsp_game_start(Bin, TrUserData) ->
     dfp_read_field_def_rsp_game_start(Bin, 0, 0,
 				      id(undefined, TrUserData),
-				      id(undefined, TrUserData), TrUserData).
+				      id(undefined, TrUserData),
+				      id([], TrUserData), TrUserData).
 
 dfp_read_field_def_rsp_game_start(<<8, Rest/binary>>,
-				  Z1, Z2, F1, F2, TrUserData) ->
-    d_field_rsp_game_start_uid(Rest, Z1, Z2, F1, F2,
+				  Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_game_start_uid(Rest, Z1, Z2, F1, F2, F3,
 			       TrUserData);
 dfp_read_field_def_rsp_game_start(<<16, Rest/binary>>,
-				  Z1, Z2, F1, F2, TrUserData) ->
-    d_field_rsp_game_start_round(Rest, Z1, Z2, F1, F2,
+				  Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_game_start_round(Rest, Z1, Z2, F1, F2, F3,
+				 TrUserData);
+dfp_read_field_def_rsp_game_start(<<26, Rest/binary>>,
+				  Z1, Z2, F1, F2, F3, TrUserData) ->
+    d_field_rsp_game_start_cards(Rest, Z1, Z2, F1, F2, F3,
 				 TrUserData);
 dfp_read_field_def_rsp_game_start(<<>>, 0, 0, F1, F2,
-				  _) ->
-    #rsp_game_start{uid = F1, round = F2};
+				  F3, TrUserData) ->
+    #rsp_game_start{uid = F1, round = F2,
+		    cards = lists_reverse(F3, TrUserData)};
 dfp_read_field_def_rsp_game_start(Other, Z1, Z2, F1, F2,
-				  TrUserData) ->
+				  F3, TrUserData) ->
     dg_read_field_def_rsp_game_start(Other, Z1, Z2, F1, F2,
-				     TrUserData).
+				     F3, TrUserData).
 
 dg_read_field_def_rsp_game_start(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, F2, TrUserData)
+				 N, Acc, F1, F2, F3, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_rsp_game_start(Rest, N + 7,
-				     X bsl N + Acc, F1, F2, TrUserData);
+				     X bsl N + Acc, F1, F2, F3, TrUserData);
 dg_read_field_def_rsp_game_start(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F1, F2, TrUserData) ->
+				 N, Acc, F1, F2, F3, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_rsp_game_start_uid(Rest, 0, 0, F1, F2,
+	  d_field_rsp_game_start_uid(Rest, 0, 0, F1, F2, F3,
 				     TrUserData);
       16 ->
-	  d_field_rsp_game_start_round(Rest, 0, 0, F1, F2,
+	  d_field_rsp_game_start_round(Rest, 0, 0, F1, F2, F3,
+				       TrUserData);
+      26 ->
+	  d_field_rsp_game_start_cards(Rest, 0, 0, F1, F2, F3,
 				       TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_rsp_game_start(Rest, 0, 0, F1, F2,
+		skip_varint_rsp_game_start(Rest, 0, 0, F1, F2, F3,
 					   TrUserData);
 	    1 ->
-		skip_64_rsp_game_start(Rest, 0, 0, F1, F2, TrUserData);
+		skip_64_rsp_game_start(Rest, 0, 0, F1, F2, F3,
+				       TrUserData);
 	    2 ->
 		skip_length_delimited_rsp_game_start(Rest, 0, 0, F1, F2,
-						     TrUserData);
+						     F3, TrUserData);
 	    5 ->
-		skip_32_rsp_game_start(Rest, 0, 0, F1, F2, TrUserData)
+		skip_32_rsp_game_start(Rest, 0, 0, F1, F2, F3,
+				       TrUserData)
 	  end
     end;
-dg_read_field_def_rsp_game_start(<<>>, 0, 0, F1, F2,
-				 _) ->
-    #rsp_game_start{uid = F1, round = F2}.
+dg_read_field_def_rsp_game_start(<<>>, 0, 0, F1, F2, F3,
+				 TrUserData) ->
+    #rsp_game_start{uid = F1, round = F2,
+		    cards = lists_reverse(F3, TrUserData)}.
 
 d_field_rsp_game_start_uid(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F1, F2, TrUserData)
+			   Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     d_field_rsp_game_start_uid(Rest, N + 7, X bsl N + Acc,
-			       F1, F2, TrUserData);
+			       F1, F2, F3, TrUserData);
 d_field_rsp_game_start_uid(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, F2, TrUserData) ->
+			   Acc, _, F2, F3, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_game_start(Rest, 0, 0, NewFValue,
-				      F2, TrUserData).
+				      F2, F3, TrUserData).
 
 
 d_field_rsp_game_start_round(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F1, F2, TrUserData)
+			     N, Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     d_field_rsp_game_start_round(Rest, N + 7, X bsl N + Acc,
-				 F1, F2, TrUserData);
+				 F1, F2, F3, TrUserData);
 d_field_rsp_game_start_round(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F1, _, TrUserData) ->
+			     N, Acc, F1, _, F3, TrUserData) ->
     <<NewFValue:32/signed-native>> = <<(X bsl N +
 					  Acc):32/unsigned-native>>,
     dfp_read_field_def_rsp_game_start(Rest, 0, 0, F1,
-				      NewFValue, TrUserData).
+				      NewFValue, F3, TrUserData).
+
+
+d_field_rsp_game_start_cards(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F1, F2, F3, TrUserData)
+    when N < 57 ->
+    d_field_rsp_game_start_cards(Rest, N + 7, X bsl N + Acc,
+				 F1, F2, F3, TrUserData);
+d_field_rsp_game_start_cards(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F1, F2, F3, TrUserData) ->
+    Len = X bsl N + Acc,
+    <<Bs:Len/binary, Rest2/binary>> = Rest,
+    NewFValue = id(d_msg_pb_unit(Bs, TrUserData),
+		   TrUserData),
+    dfp_read_field_def_rsp_game_start(Rest2, 0, 0, F1, F2,
+				      cons(NewFValue, F3, TrUserData),
+				      TrUserData).
 
 
 skip_varint_rsp_game_start(<<1:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, F2, TrUserData) ->
-    skip_varint_rsp_game_start(Rest, Z1, Z2, F1, F2,
+			   Z1, Z2, F1, F2, F3, TrUserData) ->
+    skip_varint_rsp_game_start(Rest, Z1, Z2, F1, F2, F3,
 			       TrUserData);
 skip_varint_rsp_game_start(<<0:1, _:7, Rest/binary>>,
-			   Z1, Z2, F1, F2, TrUserData) ->
+			   Z1, Z2, F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
-				      TrUserData).
+				      F3, TrUserData).
 
 
 skip_length_delimited_rsp_game_start(<<1:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, F2, TrUserData)
+				     N, Acc, F1, F2, F3, TrUserData)
     when N < 57 ->
     skip_length_delimited_rsp_game_start(Rest, N + 7,
-					 X bsl N + Acc, F1, F2, TrUserData);
+					 X bsl N + Acc, F1, F2, F3, TrUserData);
 skip_length_delimited_rsp_game_start(<<0:1, X:7,
 				       Rest/binary>>,
-				     N, Acc, F1, F2, TrUserData) ->
+				     N, Acc, F1, F2, F3, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_rsp_game_start(Rest2, 0, 0, F1, F2,
-				      TrUserData).
+				      F3, TrUserData).
 
 
 skip_32_rsp_game_start(<<_:32, Rest/binary>>, Z1, Z2,
-		       F1, F2, TrUserData) ->
+		       F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
-				      TrUserData).
+				      F3, TrUserData).
 
 
 skip_64_rsp_game_start(<<_:64, Rest/binary>>, Z1, Z2,
-		       F1, F2, TrUserData) ->
+		       F1, F2, F3, TrUserData) ->
     dfp_read_field_def_rsp_game_start(Rest, Z1, Z2, F1, F2,
-				      TrUserData).
+				      F3, TrUserData).
 
 
 d_msg_rsp_start(Bin, TrUserData) ->
@@ -8271,13 +8321,17 @@ merge_msg_pb_unit(#pb_unit{},
 		  #pb_unit{type = NFtype, num = NFnum}, _) ->
     #pb_unit{type = NFtype, num = NFnum}.
 
-merge_msg_rsp_game_start(#rsp_game_start{uid = PFuid},
-			 #rsp_game_start{uid = NFuid, round = NFround}, _) ->
+merge_msg_rsp_game_start(#rsp_game_start{uid = PFuid,
+					 cards = PFcards},
+			 #rsp_game_start{uid = NFuid, round = NFround,
+					 cards = NFcards},
+			 TrUserData) ->
     #rsp_game_start{uid =
 			if NFuid =:= undefined -> PFuid;
 			   true -> NFuid
 			end,
-		    round = NFround}.
+		    round = NFround,
+		    cards = 'erlang_++'(PFcards, NFcards, TrUserData)}.
 
 merge_msg_rsp_start(#rsp_start{},
 		    #rsp_start{status = NFstatus}, _) ->
@@ -8837,12 +8891,20 @@ v_msg_pb_unit(X, Path, _TrUserData) ->
 
 -dialyzer({nowarn_function,v_msg_rsp_game_start/3}).
 v_msg_rsp_game_start(#rsp_game_start{uid = F1,
-				     round = F2},
-		     Path, _) ->
+				     round = F2, cards = F3},
+		     Path, TrUserData) ->
     if F1 == undefined -> ok;
        true -> v_type_int32(F1, [uid | Path])
     end,
     v_type_int32(F2, [round | Path]),
+    if is_list(F3) ->
+	   _ = [v_msg_pb_unit(Elem, [cards | Path], TrUserData)
+		|| Elem <- F3],
+	   ok;
+       true ->
+	   mk_type_error({invalid_list_of, {msg, pb_unit}}, F3,
+			 Path)
+    end,
     ok.
 
 -dialyzer({nowarn_function,v_msg_rsp_start/3}).
@@ -9357,7 +9419,10 @@ get_msg_defs() ->
       [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	      occurrence = optional, opts = []},
        #field{name = round, fnum = 2, rnum = 3, type = int32,
-	      occurrence = required, opts = []}]},
+	      occurrence = required, opts = []},
+       #field{name = cards, fnum = 3, rnum = 4,
+	      type = {msg, pb_unit}, occurrence = repeated,
+	      opts = []}]},
      {{msg, rsp_start},
       [#field{name = status, fnum = 1, rnum = 2,
 	      type = sint32, occurrence = required, opts = []}]},
@@ -9675,7 +9740,10 @@ find_msg_def(rsp_game_start) ->
     [#field{name = uid, fnum = 1, rnum = 2, type = int32,
 	    occurrence = optional, opts = []},
      #field{name = round, fnum = 2, rnum = 3, type = int32,
-	    occurrence = required, opts = []}];
+	    occurrence = required, opts = []},
+     #field{name = cards, fnum = 3, rnum = 4,
+	    type = {msg, pb_unit}, occurrence = repeated,
+	    opts = []}];
 find_msg_def(rsp_start) ->
     [#field{name = status, fnum = 1, rnum = 2,
 	    type = sint32, occurrence = required, opts = []}];
