@@ -29,7 +29,8 @@
 %%% ready => []
 create(#{player := PlayerInfo, room_id := RoomId, room_info := RoomInfo}) ->
   #{uid := Uid} = PlayerInfo,
-  down(#{round => 0, players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo#{room_id => RoomId, owner => Uid}, num => 1, ready => [], state => ?Ready}).
+  #{round := Round} = RoomInfo,
+  down(#{round => Round, players => [PlayerInfo#{index => 1, owner => 1}], owner => Uid, room_info => RoomInfo#{room_id => RoomId, owner => Uid}, num => 1, ready => [], state => ?Ready}).
 
 join(Player) ->
   #{players := Players, num := Num} = Room = load(),
@@ -61,15 +62,15 @@ ready(Uid, Type) ->
   multi_cast(Players, {mod_room, player_ready, [Uid, Type]}).
 
 start(Uid) ->
-  #{owner := Owner, ready := Ready, players := Players, room_info := RoomInfo, state := State} = Room = load(),
+  #{round := Round, owner := Owner, ready := Ready, players := Players, room_info := RoomInfo, state := State} = Room = load(),
   if
     Owner =/= Uid -> {error, no_owner};
     length(Ready) =/= length(Players) - 1 -> {error, no_ready};  %%房主不用准备
     length(Ready) == 0 -> {error, no_play};
     State =/= ?Ready -> {error, no_ready};
     true ->
-      #{banker := BankerType, round := Round} = RoomInfo,
-      down(Room#{ready => [], round => Round + 1}),
+      #{banker := BankerType} = RoomInfo,
+      down(Room#{ready => [], round => Round - 1}),
       case room_war:choose_banker(Players, BankerType) of
         {undefined, Cards} -> multi_cast(Players, {mod_room, game_start, [Round, Cards]});
         {Uid1, Cards} -> multi_cast(Players, {mod_room, game_start, [Uid1, Round, Cards]})
