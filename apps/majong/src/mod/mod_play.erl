@@ -42,10 +42,12 @@ login(Bin) ->
   Logo = maps:get(logo, UserInfo, undefined),
   Name = maps:get(name, UserInfo, undefined),
   Uid = maps:get(uid, UserInfo),
+  Coins = maps:get(coins, UserInfo, 0),
+  Gems = maps:get(gems, UserInfo, 0),
   mod_play:id(Uid),
   gproc:register_name({n, l, {uid, Uid}}, self()),
   lager:info("uid : ~p", [Uid]),
-  player:rsp(1, 1, #rsp_login{status = Status, coins = 111, gems = 121, logo = Logo, name = Name, uid = Uid}).
+  player:rsp(1, 1, #rsp_login{status = Status, coins = Coins, gems = Gems, logo = Logo, name = Name, uid = Uid}).
 
 pub(_Bin) ->
   player:rsp(1, 2, #rsp_pub{status = 0, pub = <<"666666">>}),
