@@ -44,10 +44,14 @@ init() ->
 get_uids(Index) ->
   Conn = mgo_comm:get_conn(),
   Q = #{<<"_id">> => #{<<"$lt">> => (Index + 1) * ?SIZE, <<"$gte">> => Index * ?SIZE}},
-  {ok, Cursor} = mongo_api:find(Conn, <<"users">>, Q, #{<<"_id">> => 1}),
-  Docs = mc_cursor:rest(Cursor),
-  mc_cursor:close(Cursor),
-  [X || #{<<"_id">> := X} <- Docs].
+  R = mongo_api:find(Conn, <<"users">>, Q, #{<<"_id">> => 1}),
+  case R of
+    [] -> [];
+    {ok, Cursor} ->
+      Docs = mc_cursor:rest(Cursor),
+      mc_cursor:close(Cursor),
+      [X || #{<<"_id">> := X} <- Docs]
+  end.
 
 save_client_data(Uid, Data) ->
   Conn = mgo_comm:get_conn(),

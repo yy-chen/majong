@@ -13,7 +13,8 @@
         dhcomm,
         gproc,
         jiffy,
-        ibrowse
+        ibrowse,
+        mongodb
       ]},
     {env, []},
     {modules, []},
