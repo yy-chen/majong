@@ -86,8 +86,8 @@ join(Bin) ->
 new_player(#{uid := Uid} = Player) ->
   lager:info("new player : ~p", [Player]),
   case mod_play:id() of
-    Uid -> player:rsp(2, 3, #rsp_new_player{player = player2pb(Player)});
-    _ -> ok
+    Uid -> ok;
+    _ -> player:rsp(2, 3, #rsp_new_player{player = player2pb(Player)})
   end.
 
 leave() ->
