@@ -35,6 +35,8 @@ login(Channel, Code) ->
       UserInfo1 = jiffy:decode(UserInfo, [return_maps]),
       MgoUser = mgo_user:load(OpenId),
       R = merge(UserInfo1, MgoUser),
+      R1 = R#{<<"openid">> => OpenId},
+      mgo_user:save(R1),
       {0, R#{<<"openid">> => OpenId}}
   end.
 
