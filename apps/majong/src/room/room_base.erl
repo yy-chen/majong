@@ -37,7 +37,9 @@ join(Player) ->
   if
     Num == 5 -> {error, full};     %%满人
     true ->
-      down(Room#{players => lists:usort(Players ++ [Player]), num => Num + 1}),
+      #{uid := Uid} = Player,
+      Players1 = lists:filter(fun(#{uid := UidTmp}) -> UidTmp =/= Uid end, Players),
+      down(Room#{players => lists:usort(Players1 ++ [Player]), num => Num + 1}),
       multi_cast(Players, {mod_room, new_player, [Player]}),
       Room
   end.
