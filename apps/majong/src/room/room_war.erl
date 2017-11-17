@@ -12,13 +12,13 @@
 -include("majong_pb.hrl").
 %% API
 -export([
-  choose_banker/2,
+  choose_banker/4,
   zhuang/2,
   score/2,
   show/1
 ]).
 
-choose_banker(Players, BankerType) ->
+choose_banker(Players, BankerType, Round, TotalRound) ->
   Uids = [Uid || #{uid := Uid} <- Players],
   Info = init(),
   Cards = get_cards(Uids),
@@ -28,14 +28,14 @@ choose_banker(Players, BankerType) ->
     1 -> undefined;
     2 ->
       Info1 = load(),
-      #{l_zhuang := Lzhuang} = Info1 = load(),
-      {NewList, Lzhuang1} = case Uids -- Lzhuang of
-                              [] -> {Uids, []};
-                              L -> {L, Lzhuang}
-                            end,
-      N = rand:uniform(length(NewList)),
-      Zhuang = lists:nth(N, NewList),
-      down(Info1#{zhuang => {Zhuang, 1}, l_zhuang => Lzhuang1 ++ [Zhuang]}),
+%%      #{l_zhuang := Lzhuang} = Info1 = load(),
+%%      {NewList, Lzhuang1} = case Uids -- Lzhuang of
+%%                              [] -> {Uids, []};
+%%                              L -> {L, Lzhuang}
+%%                            end,
+      N = (TotalRound - Round + 1) rem length(Uids) + 1,
+      Zhuang = lists:nth(N, Uids),
+      down(Info1#{zhuang => {Zhuang, 1}}),
       Zhuang;
     3 ->
       N = rand:uniform(length(Uids)),

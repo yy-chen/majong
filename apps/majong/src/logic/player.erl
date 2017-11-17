@@ -75,6 +75,12 @@ code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 terminate(_Reason, _State) ->
   gproc:goodbye(),
+  case mod_room:room_id() of
+    undefined -> ok;
+    RoomId ->
+      Uid = mod_play:id(),
+      room:async_exec(RoomId, {room_base, leave, [Uid]})
+  end,
   ok.
 
 dispatch(<<G:32, C:32, Bin/binary>>) ->

@@ -12,6 +12,10 @@
 -define(PDict, mod_room).
 %% API
 -export([
+  room_id/0
+]).
+
+-export([
   dispatch/2,
   create/1,
   new_player/1,
@@ -184,6 +188,12 @@ player_chat(#{uid := Uid, msg := Msg, url := Url}) ->
   if
     Self == Uid -> ok;
     true -> player:rsp(2, 17, #rsp_player_chat{uid = Uid, url = Url, msg = Msg})
+  end.
+
+room_id() ->
+  case load() of
+    undefined -> undefined;
+    #{room_id := RoomId} -> RoomId
   end.
 
 load() ->

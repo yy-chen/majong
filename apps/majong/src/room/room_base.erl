@@ -37,7 +37,7 @@ join(Player) ->
   if
     Num == 5 -> {error, full};     %%满人
     true ->
-      down(Room#{players => Players ++ [Player], num => Num + 1}),
+      down(Room#{players => lists:usort(Players ++ [Player]), num => Num + 1}),
       multi_cast(Players, {mod_room, new_player, [Player]}),
       Room
   end.
@@ -69,9 +69,9 @@ start(Uid) ->
     length(Ready) == 0 -> {error, no_play};
     State =/= ?Ready -> {error, no_ready};
     true ->
-      #{banker := BankerType} = RoomInfo,
+      #{banker := BankerType, round := TotalRound} = RoomInfo,
       down(Room#{ready => [], round => Round - 1}),
-      case room_war:choose_banker(Players, BankerType) of
+      case room_war:choose_banker(Players, BankerType, Round, TotalRound) of
         {undefined, Cards} -> multi_cast(Players, {mod_room, game_start, [Round, Cards]});
         {Uid1, Cards} -> multi_cast(Players, {mod_room, game_start, [Uid1, Round, Cards]})
       end
