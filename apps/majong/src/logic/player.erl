@@ -75,6 +75,7 @@ code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 terminate(_Reason, _State) ->
   gproc:goodbye(),
+  lager:info("player terminate"),
   case mod_room:room_id() of
     undefined -> ok;
     RoomId ->
