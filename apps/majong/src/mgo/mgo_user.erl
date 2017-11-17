@@ -12,6 +12,7 @@
 -define(SIZE, 1000000).
 %% API
 -export([
+  init_index/0,
   load/1,
   get_uids/1,
   save/1,
@@ -19,7 +20,10 @@
   get_client_data/1
 ]).
 
-
+init_index() ->
+  Conn = mgo_comm:get_conn(),
+  mongo_api:ensure_index(Conn, <<"users">>, #{<<"key">> => #{<<"openid">> => 1}}),
+  ok.
 
 load(undefined) ->  %%新建
   #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => allocate_uid:allocate()};
@@ -31,8 +35,14 @@ load(Uid) when is_integer(Uid) ->
       dhmap:from_mongo(Doc);
     _ -> init()
   end;
-load(_OpenId) ->
-  #{coins => 0, gems => 0, logo => <<"">>, name => <<"">>, uid => allocate_uid:allocate()}.
+load(OpenId) ->
+  Conn = mgo_comm:get_conn(),
+  Doc = mongo_api:find_one(Conn, <<"users">>, #{<<"openid">> => OpenId}, #{}),
+  case Doc of
+    #{<<"openid">> := OpenId} ->
+      dhmap:from_mongo(Doc);
+    _ -> init()
+  end.
 
 save(#{uid := Uid} = Doc) ->
   Conn = mgo_comm:get_conn(),
