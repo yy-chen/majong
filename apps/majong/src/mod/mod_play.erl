@@ -20,7 +20,8 @@
   id/0,
   id/1,
   base/0,
-  client_data/2
+  client_data/2,
+  save/0
 ]).
 
 dispatch(C, B) ->
@@ -52,14 +53,22 @@ pub(_Bin) ->
 
 client_data(1, Bin) ->
   #req_save_data{data = Data} = majong_pb:decode_msg(Bin, req_save_data),
+  mgo_user:save_client_data(mod_play:id(), Data),
   put(client_data, Data);
 
 client_data(2, _Bin) ->
-  player:rsp(100, 2, #rsp_get_data{data = get(client_data)}).
+  Data = mgo_user:get_client_data(mod_play:id()),
+  player:rsp(100, 2, #rsp_get_data{data = Data}).
 
 id(Uid) -> put(user_id, Uid).
 id() -> get(user_id).
 base() -> maps:with([uid, name, logo], get(?PDict)).
+
+save() ->
+  case get(?PDict) of
+    undefined -> ok;
+    D -> mgo_user:save(D)
+  end.
 
 down(Player) ->
   put(?PDict, Player).

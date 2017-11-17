@@ -82,6 +82,7 @@ terminate(_Reason, _State) ->
       Uid = mod_play:id(),
       room:async_exec(RoomId, {room_base, leave, [Uid]})
   end,
+  mod_play:save(),
   ok.
 
 dispatch(<<G:32, C:32, Bin/binary>>) ->

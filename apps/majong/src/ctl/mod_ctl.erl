@@ -15,6 +15,7 @@ init() ->
   start_listen(),
   start_room(),
   allocate_uid:start_pool(),
+  mgo_comm:init_pool(),
   ok.
 
 start_player_sup() ->
