@@ -75,9 +75,9 @@ join(Bin) ->
     #{room_info := RoomInfo, players := Players} ->
       PbRoom = room2pb(RoomInfo),
       lager:info("rsp join room info : ~p", [RoomInfo]),
-      lager:info("rsp join players : ~p", [Players]),
       lager:info("info1 : ~p", [Info1]),
       Players1 = lists:filter(fun(#{uid := UidTmp}) -> Uid =/= UidTmp end, Players),
+      lager:info("rsp join players : ~p", [Players1]),
       PbPlayers = player2pb(Players1),
       down(#{room_id => RoomId}),
       player:rsp(2, 2, #rsp_join{status = 0, players = PbPlayers, room_info = PbRoom})
