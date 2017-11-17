@@ -21,7 +21,25 @@ init_pool() ->
     {name, majong_pool},
     {pool_size, 10},
     {max_overflow, 50},
-    {register, ?Topology}
+    {register, ?Topology},
+
+    {overflow_ttl, 1000}, % number of milliseconds for overflow workers to stay in pool before terminating
+    {overflow_check_period, 1000}, % overflow_ttl check period for workers (in milliseconds)
+
+    {localThresholdMS, 1000},
+
+    {connectTimeoutMS, 20000},
+    {socketTimeoutMS, 100},
+
+    {serverSelectionTimeoutMS, 30000},
+    {waitQueueTimeoutMS, 1000},
+
+    {heartbeatFrequencyMS, 10000},
+    {minHeartbeatFrequencyMS, 1000},
+
+    {rp_mode, primary},
+
+    {rp_tags, [{tag, 1}]}
   ],
   WorkOpts = [{database, Db}],
   {ok, _Pid} = mongo_api:connect(single, Mongo, Options, WorkOpts).
