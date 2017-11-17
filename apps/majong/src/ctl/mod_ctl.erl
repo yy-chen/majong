@@ -11,11 +11,11 @@ init() ->
   lager:info("logic start"),
   inets:start(),
   mod_svr:init(),
+  mgo_comm:init_pool(),
   start_player_sup(),
   start_listen(),
   start_room(),
   allocate_uid:start_pool(),
-  mgo_comm:init_pool(),
   ok.
 
 start_player_sup() ->
