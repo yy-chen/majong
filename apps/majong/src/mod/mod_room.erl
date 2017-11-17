@@ -67,7 +67,7 @@ create(Bin) ->
 
 join(Bin) ->
   #req_join{id = RoomId} = majong_pb:decode_msg(Bin, req_join),
-  Info = mod_play:base(),
+  #{uid := Uid} = Info = mod_play:base(),
   Info1 = Info#{pid => self()},
   lager:info("id : ~p", [RoomId]),
   case room:sync_exec(RoomId, {room_base, join, [Info1]}) of
@@ -76,7 +76,9 @@ join(Bin) ->
       PbRoom = room2pb(RoomInfo),
       lager:info("rsp join room info : ~p", [RoomInfo]),
       lager:info("rsp join players : ~p", [Players]),
-      PbPlayers = player2pb(lists:delete(Info1, Players)),
+      lager:info("info1 : ~p", [Info1]),
+      Players1 = lists:filter(fun(#{uid := UidTmp}) -> Uid =/= UidTmp end, Players),
+      PbPlayers = player2pb(Players1),
       down(#{room_id => RoomId}),
       player:rsp(2, 2, #rsp_join{status = 0, players = PbPlayers, room_info = PbRoom})
   end.
